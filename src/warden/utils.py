@@ -37,11 +37,9 @@ def create_config(config_file):
     return (default_config)
 
 
-def update_config(config_file=Config.config_file):
-    logging.info("Updating Config file")
-    from flask import current_app
+def update_config(config, config_file=Config.config_file):
     with open(config_file, 'w') as file:
-        current_app.settings.write(file)
+        config.write(file)
 
 
 def load_config(config_file=Config.config_file):
