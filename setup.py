@@ -3,6 +3,10 @@ import setuptools
 # Update current version here
 current_version = "0.0.1"
 
+# Save this version for later use in a text file accessible from app
+with open("src/warden/static/version.txt", "w") as text_file:
+    print(f"{current_version}", file=text_file)
+
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
