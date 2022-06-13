@@ -11,7 +11,8 @@ sys.path.append('../src/warden')
 # App specific imports
 from connections import url_parser
 from config import Config
-from mempoolspace import (mp_urls, check_api_health, get_address)
+from mempoolspace import (mp_urls, check_api_health, get_address_utxo,
+                          xpub_derive, xpub_balances)
 from utils import pickle_it
 
 
@@ -134,8 +135,33 @@ class TestMPS(unittest.TestCase):
         address = '1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv'
         print("Gathering address info for: " + address)
         url = 'https://mempool.space/'
-        address_info = get_address(url, address)
+        address_info = get_address_utxo(url, address)
         print(address_info)
+
+    def test_xpub_derivation(self):
+        # Sample xpub with balances
+        xpub = "xpub6C9vKwUFiBLbQKS6mhEAtEYhS24sVz8MkvMjxQSECTZVCnFmy675zojLthvXVuQf15RT6ggmt7PTgLBV2tLHHdJenoEkNWe5VPBETncxf2q"
+        n_of_add = 5
+        print("Deriving " + str(n_of_add) + " addresses from " + xpub)
+        lst = xpub_derive(xpub=xpub,
+                          number_of_addresses=n_of_add,
+                          start_number=0,
+                          output_type='P2WPKH')
+        print(lst)
+        print("Deriving " + str(n_of_add) + " addresses from " + xpub)
+        lst = xpub_derive(xpub=xpub,
+                          number_of_addresses=n_of_add,
+                          start_number=0,
+                          output_type='P2PKH')
+        print(lst)
+
+    def test_get_xpub_balances(self):
+        # Sample xpub with balances
+        xpub = "xpub6C9vKwUFiBLbQKS6mhEAtEYhS24sVz8MkvMjxQSECTZVCnFmy675zojLthvXVuQf15RT6ggmt7PTgLBV2tLHHdJenoEkNWe5VPBETncxf2q"
+        url = 'https://mempool.space/'
+        balances = xpub_balances(url, xpub)
+        print("Balances and addresses for xpub: " + xpub)
+        print(balances)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
 from datetime import datetime
+from embit import bip32, script
+from embit.networks import NETWORKS
 import requests
 import pandas as pd
 from utils import load_config, pickle_it, update_config
@@ -101,12 +103,10 @@ def check_api_health(url, public):
     return api_reachable
 
 
-def get_address(url, address):
+def get_address_utxo(url, address):
     # Endpoint
-    # GET /api/address/:address/txs
-    # Will return only 25 txs - for more use:
-    # :last_seen_txid
-    endpoint = 'api/address/' + address + '/txs'
+    # GET /api/address/:address/utxo
+    endpoint = 'api/address/' + address + '/utxo'
     address_info = {'address': address}
     result = tor_request(url + endpoint)
     try:
@@ -117,31 +117,70 @@ def get_address(url, address):
     # Clean results and include into a dataframe
     df = pd.DataFrame().from_dict(address_json)
 
-    # Vin and Vouts are lists stored in the df - vin and vout
-    # will cycle through list and get each vin and vout
-    def get_vin_total(row):
-        vin_total = 0
-        for element in row['vin']:
-            print(element)
-            vin_total += element['prevout']['value']
-        return vin_total
-
-    def get_vout_total(row):
-        vout_total = 0
-        for element in row['vout']:
-            print(element)
-            vout_total += element['value']
-        return vout_total
-
-    df['vin_total'] = df.apply(get_vin_total, axis=1)
-    df['vout_total'] = df.apply(get_vout_total, axis=1)
-    df['v_net'] = df['vin_total'] - df['vout_total']
-
     address_info['df'] = df
-
-    # Include totals
-    address_info['vin_total'] = df['vin_total'].sum()
-    address_info['vout_total'] = df['vout_total'].sum()
-    address_info['balance'] = df['v_net'].sum()
+    # Include total balance
+    if df.empty is not True:
+        address_info['balance'] = df['value'].sum()
+    else:
+        address_info['balance'] = 0
 
     return address_info
+
+
+def xpub_derive(xpub,
+                number_of_addresses,
+                start_number=0,
+                output_type='P2PKH'):
+    # Output type: P2WPKH, P2PKH
+    # Derivation Path: m/84'/0'
+    hd = bip32.HDKey.from_string(xpub)
+    add_list = []
+    net = NETWORKS['main']
+    for i in range(0, number_of_addresses):
+        ad = hd.derive([start_number, i])
+        if output_type == 'P2WPKH':
+            add_list.append(script.p2wpkh(ad).address(net))
+        elif output_type == 'P2PKH':
+            add_list.append(script.p2pkh(ad).address(net))
+        else:
+            raise Exception("Invalid output type")
+    return add_list
+
+
+def xpub_balances(url, xpub, derivation_types=['P2WPKH', 'P2PKH']):
+    # Scan addresses in xpubs and return a list of addresses and balances
+    balance_list = []
+    for derivation_type in derivation_types:
+        counter = 0
+        end_counter = 10
+        while True:
+            # Get the first address
+            address = xpub_derive(xpub=xpub,
+                                  number_of_addresses=1,
+                                  start_number=counter,
+                                  output_type=derivation_type)
+            # Check balance
+            balance = get_address_utxo(url, address[0])['balance']
+            # Found something, include
+            if balance != 0:
+                # Tries at least 10 more addresses after the last balance
+                # was found
+                end_counter = counter + 10
+                add_dict = {
+                    'address': address,
+                    'utxos': get_address_utxo(url, address[0]),
+                    'balance': balance
+                }
+            # Empty address
+            else:
+                add_dict = {'address': address, 'utxos': None, 'balance': 0}
+
+            counter += 1
+            # Add to list
+            balance_list.append(add_dict)
+
+            # 10 sequential addresses with no balance found, break
+            if counter >= end_counter:
+                break
+
+    return balance_list
