@@ -1,0 +1,101 @@
+.table-condensed {
+    font-size: 16px;
+    border: none;
+    border-spacing: 6px;
+    border-collapse: collapse;
+}
+
+
+
+.bg-steel {
+    background-color: #252525;
+}
+
+.small-text {
+    font-size: 14px;
+}
+
+
+.hinumber {
+    color: #1f5168;
+}
+
+.hinumbersmall {
+    color: #1f5168;
+}
+
+h6 {
+    color: #7c7c7c;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+
+pre {
+    font-family: monospace;
+}
+
+.codetext {
+    font-family: monospace;
+    font-size: 120%;
+    background-color: LightGray;
+    font-weight: bold;
+}
+
+/* CSS for Animated Loading info */
+#wrapper {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 80em;
+}
+
+.loadanim {
+    animation: text-shadow 1s ease-in-out infinite;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1;
+}
+
+a {
+    color: #024794;
+}
+
+@keyframes text-shadow {
+    0% {
+        transform: translateY(0);
+        text-shadow: 0 0 0 #0c2ffb, 0 0 0 #2cfcfd, 0 0 0 #fb203b, 0 0 0 #fefc4b;
+    }
+
+    20% {
+        transform: translateY(-1em);
+        text-shadow: 0 0.125em 0 #0c2ffb, 0 0.25em 0 #2cfcfd, 0 -0.125em 0 #fb203b,
+            0 -0.25em 0 #fefc4b;
+    }
+
+    40% {
+        transform: translateY(0.5em);
+        text-shadow: 0 -0.0625em 0 #0c2ffb, 0 -0.125em 0 #2cfcfd,
+            0 0.0625em 0 #fb203b, 0 0.125em 0 #fefc4b;
+    }
+
+    60% {
+        transform: translateY(-0.25em);
+        text-shadow: 0 0.03125em 0 #0c2ffb, 0 0.0625em 0 #2cfcfd,
+            0 -0.03125em 0 #fb203b, 0 -0.0625em 0 #fefc4b;
+    }
+
+    80% {
+        transform: translateY(0);
+        text-shadow: 0 0 0 #0c2ffb, 0 0 0 #2cfcfd, 0 0 0 #fb203b, 0 0 0 #fefc4b;
+    }
+}
+
+
+.stripedBackground {
+    color: white;
+    background: repeating-linear-gradient(-55deg,
+            rgb(254, 254, 254),
+            rgb(254, 254, 254) 10px,
+            rgb(248, 248, 248) 10px,
+            rgb(248, 248, 248) 20px);
+}

@@ -54,6 +54,14 @@ def mp_urls(action=None, url=None, public=True):
     return {'public': public_list, 'private': private_list}
 
 
+def check_all_servers():
+    mp_addresses = mp_urls()
+    for public_url in mp_addresses['public']:
+        check_api_health(public_url, public=True)
+    for personal_url in mp_addresses['private']:
+        check_api_health(personal_url, public=False)
+
+
 def check_api_health(url, public):
     # Check if API is reachable and saves the latest status in a pickle
     # formatted like the below:

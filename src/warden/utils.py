@@ -122,7 +122,6 @@ def fxsymbol(fx, output='symbol'):
     # "rounding": 0,
     # "code": "EUR",
     # "name_plural": "euros"
-    from warden_modules import current_path
     filename = os.path.join(current_path(), 'static/json_files/currency.json')
     with open(filename) as fx_json:
         fx_list = json.load(fx_json)
@@ -133,69 +132,6 @@ def fxsymbol(fx, output='symbol'):
             return (fx_list[fx])
         out = fx
     return (out)
-
-
-def heatmap_generator():
-    # If no Transactions for this user, return empty.html
-    from warden_modules import transactions_fx, generatenav
-    transactions = transactions_fx()
-    if transactions.empty:
-        return None, None, None, None
-
-    # Generate NAV Table first
-    data = generatenav()
-    data["navpchange"] = (data["NAV_fx"] / data["NAV_fx"].shift(1)) - 1
-    returns = data["navpchange"]
-    # Run the mrh function to generate heapmap table
-    heatmap = mrh.get(returns, eoy=True)
-
-    heatmap_stats = heatmap
-    cols = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-        "eoy",
-    ]
-    cols_months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-    ]
-    years = (heatmap.index.tolist())
-    heatmap_stats["MAX"] = heatmap_stats[heatmap_stats[cols_months] != 0].max(
-        axis=1)
-    heatmap_stats["MIN"] = heatmap_stats[heatmap_stats[cols_months] != 0].min(
-        axis=1)
-    heatmap_stats["POSITIVES"] = heatmap_stats[
-        heatmap_stats[cols_months] > 0].count(axis=1)
-    heatmap_stats["NEGATIVES"] = heatmap_stats[
-        heatmap_stats[cols_months] < 0].count(axis=1)
-    heatmap_stats["POS_MEAN"] = heatmap_stats[
-        heatmap_stats[cols_months] > 0].mean(axis=1)
-    heatmap_stats["NEG_MEAN"] = heatmap_stats[
-        heatmap_stats[cols_months] < 0].mean(axis=1)
-    heatmap_stats["MEAN"] = heatmap_stats[
-        heatmap_stats[cols_months] != 0].mean(axis=1)
-
-    return (heatmap, heatmap_stats, years, cols)
 
 
 def determine_docker_host_ip_address():

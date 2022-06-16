@@ -9,6 +9,26 @@ import concurrent.futures
 from concurrent.futures import wait, ALL_COMPLETED
 
 
+# Checks for internet conection [7]
+# Saved to: internet_connected.pkl
+# Returns: True / False
+def internet_connected(host="8.8.8.8", port=53, timeout=3):
+    """
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    """
+    connected = False
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        connected = True
+    except socket.error as ex:
+        connected = False
+    pickle_it('save', 'diags_internet_connected.pkl', connected)
+    return (connected)
+
+
 def test_tor():
     response = {}
     session = requests.session()
