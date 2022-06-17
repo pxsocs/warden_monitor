@@ -1,5 +1,4 @@
 import os
-from flask.helpers import get_flashed_messages
 from decorators import MWT
 from flask import (Blueprint, redirect, render_template, abort, flash, session,
                    request, current_app, url_for)

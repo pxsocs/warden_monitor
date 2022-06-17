@@ -1,0 +1,55 @@
+{% extends "warden/warden_layout.html" %} {% block content %}
+
+<!-- Node List -->
+
+<div class="col-12">
+  <h1>WebSocket</h1>
+  <h5>.pkl files saved locally</h5>
+
+  <div id="status"></div>
+
+  <form id="form">
+    <select class="form-select" id="drop_pkl_list">
+      <option selected>Select pkl File</option>
+      {% for pkl in pkl_files%}
+      <option value="{{pkl}}">{{pkl}}</option>
+      {%endfor%}
+    </select>
+  </form>
+
+  <div id="variable_chosen"></div>
+  <div>
+    <pre id="log" class="codetext"></pre>
+  </div>
+
+  <script>
+    const socket = new WebSocket("ws://" + location.host + "/pickle");
+    socket.addEventListener("message", (ev) => {
+      $("#status").html("<span style='color: darkgreen'>Connected</span>");
+      $("#log").html(ev.data);
+    });
+
+    document.getElementById("drop_pkl_list").onchange = (ev) => {
+      const pkl_chosen = document.getElementById("drop_pkl_list");
+
+      document.getElementById(
+        "variable_chosen"
+      ).innerHTML = `${pkl_chosen.value}`;
+
+      ev.preventDefault();
+
+      // Executes the function every 1000 milliseconds
+      const interval = setInterval(function () {
+        if (socket.readyState === WebSocket.CLOSED) {
+          $("#status").html("<span style='color: red'>Disconnected</span>");
+          $("#log").text("WebSocket Error -- Check if app is running");
+        } else {
+          socket.send(pkl_chosen.value);
+          $("#status").html("<span style='color: darkgreen'>Connected</span>");
+          $("#log").html(ev.data);
+        }
+      }, 1000);
+    };
+  </script>
+</div>
+{% endblock %}

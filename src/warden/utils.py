@@ -3,6 +3,7 @@ import configparser
 import os
 import json
 import pickle
+import glob
 
 from config import Config
 
@@ -51,8 +52,19 @@ def load_config(config_file=Config.config_file):
 
 # Function to load and save data into pickles
 def pickle_it(action='load', filename=None, data=None):
-    filename = 'warden/' + filename
-    filename = os.path.join(home_path(), filename)
+    if filename is not None:
+        filename = 'warden_monitor/' + filename
+        filename = os.path.join(home_path(), filename)
+    else:
+        filename = 'warden_monitor/'
+        filename = os.path.join(home_path(), filename)
+
+    # list all pkl files at directory
+    if action == 'list':
+        files = os.listdir(filename)
+        ret_list = [x for x in files if x.endswith('.pkl')]
+        return (ret_list)
+
     if action == 'delete':
         try:
             os.remove(filename)
@@ -80,7 +92,7 @@ def pickle_it(action='load', filename=None, data=None):
 
 # Function to load and save data into json
 def json_it(action='load', filename=None, data=None):
-    filename = 'warden/' + filename
+    filename = 'warden_monitor/' + filename
     filename = os.path.join(home_path(), filename)
     if action == 'delete':
         try:

@@ -2,28 +2,30 @@
 
 <!-- Node List -->
 
-<div class="col">
-  <h4 class="text-left">Private Nodes and Public Services</h4>
-  <table class="table table-condensed">
-    <thead>
-      <tr>
-        <th>Source</th>
-        <th class="text-center">Latest Block</th>
-        <th class="text-end">Updated</th>
-        <th class="text-end">Info</th>
-      </tr>
-    </thead>
-    <tbody>
-      {%for server in servers%}
-      <tr>
-        <th class="text-start">Unnamed</th>
-        <td class="text-center">{{server['tip_height']}}</td>
-        <td class="text-end">{{server['last_check'] | time_ago}}</td>
-        <td class="text-end">{{server['url']}}</td>
-      </tr>
-      {%endfor%}
-    </tbody>
-  </table>
+<div class="col-12">
+  <div class="content-section table-responsive">
+    <h4 class="text-left">Private Nodes and Public Services</h4>
+    <table class="table table-condensed">
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th class="text-center">Latest Block</th>
+          <th class="text-end">Updated</th>
+          <th class="text-end">Info</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%for server in servers%}
+        <tr>
+          <th class="text-start">Unnamed</th>
+          <td class="text-center">{{server['tip_height']}}</td>
+          <td class="text-end">{{server['last_check'] | time_ago}}</td>
+          <td class="text-end">{{server['url']}}</td>
+        </tr>
+        {%endfor%}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% endblock content %} {%block modals%} {% endblock modals %}

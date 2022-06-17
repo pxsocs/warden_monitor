@@ -257,9 +257,16 @@ def init_app(app):
 
     from errors.handlers import errors
     from routes.main_routes import warden
-
     app.register_blueprint(warden)
     app.register_blueprint(errors)
+
+    # Initialize websocket
+    from flask_sock import Sock
+    from sockets.sockets import sockets
+    sock = Sock()
+    sock.init_app(app)
+
+    app.register_blueprint(sockets)
 
     # Check if home folder exists, if not create
     home = str(Path.home())

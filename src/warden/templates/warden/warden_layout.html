@@ -42,90 +42,88 @@
 
   <body id="page-top">
     <!-- Navigation-->
-    <header class="masthead bg-black small text-center text-white-50">
-      <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-        <div class="container px-4 px-lg-5">
-          <a class="navbar-brand" href="#page-top">WARden Monitor</a>
-          <button
-            class="navbar-toggler navbar-toggler-right"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarResponsive"
-            aria-controls="navbarResponsive"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            Menu
-            <i class="fas fa-bars"></i>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav ms-auto">
-              <li class="nav-item">
-                <a class="nav-link" href="{{url_for('warden.main_page')}}"
-                  >Main Page</a
-                >
-              </li>
-            </ul>
-          </div>
+
+
+   <nav class="navbar navbar-dark bg-steel navbar-expand-lg navbar-font justify-content-end">
+
+        <a class="navbar-brand" href="#page-top">WARden Monitor</a>
+        <button
+          class="navbar-toggler navbar-toggler-right"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarResponsive"
+          aria-controls="navbarResponsive"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          Menu
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('warden.main_page')}}"
+                >Main Page</a
+              >
+            </li>
+          </ul>
         </div>
-      </nav>
-    </header>
+      </div>
+    </nav>
+
+
     <!-- Main Content -->
-
-    <section class="projects-section bg-light" id="projects">
-      <div class="container">
-        <div class="row">
-          {% with messages = get_flashed_messages(with_categories=true) %} {% if
-          messages %} {% for category, message in messages %}
-          <div class="col">
-            <div id="alertsection">
-              <div id="messagealert" class="alert alert-{{ category }}">
-                {{message}}
-              </div>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="col">
+        <div id="alertsection">
+          <div id="messagealert" class="alert alert-{{ category }}">
+            {{message}}
           </div>
-          {% endfor %} {% endif %} {% endwith %}
-
-          <div class="col">{% block content %} {% endblock %}</div>
         </div>
       </div>
-    </section>
+      {% endfor %} {% endif %} {% endwith %}
 
-    <!-- Footer-->
-    <footer class="footer bg-black small text-center text-white-50">
-      <div class="row text-white">
-        <div class="col-sm-4 text-left float-left">
-          <i class="fab fa-github fa-lg text-white"></i>
-          &nbsp;&nbsp;<a
-            class="text-white"
-            style="text-decoration: none"
-            href="https://github.com/pxsocs/warden_monitor/"
-          >
-            Open Source code available at GitHub</a
-          >
-        </div>
+      <div class="col">{% block content %} {% endblock %}</div>
+    </div>
+</div>
+    <!-- Footer -->
+        <footer class="site-footer bg-steel small fixed-bottom">
 
-        <div class="col-sm-4 text-center"></div>
+            <div class="row text-white">
+                <div class="col-sm-4 text-left float-left">
+                    <i class="fab fa-github fa-lg text-white"></i>
+                    &nbsp;&nbsp;<a class='text-white' style="text-decoration : none"
+                        href='https://github.com/pxsocs/warden/'>
+                        Open Source code available at GitHub</a>
+                </div>
 
-        <div class="col-sm-4 text-center float-right">
-          <a
-            class="text-white"
-            style="text-decoration: none"
-            href="https://twitter.com/alphaazeta"
-          >
-            <i class="fab fa-twitter fa-lg"></i>
-            <span class="text-white">Developed by @AlphaaZeta&nbsp;</span></a
-          >
-        </div>
-      </div>
-    </footer>
+                <div class="col-sm-4 text-center">
 
+                </div>
+
+                <div class="col-sm-4 text-center float-right">Developed by
+                    <a class='text-white' style="text-decoration : none" href="https://twitter.com/alphaazeta">
+                        <span class="text-white">@AlphaaZeta&nbsp;</span></a>
+                </div>
+            </div>
+
+
+        </footer>
     <!-- Bootstrap core JS-->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+    crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
     <!-- Helper Functions -->
     <script src="{{url_for('static', filename='js/utils.js')}}"></script>
   </body>
+
 
   {%block modals%} {%endblock%}
 </html>
