@@ -2,6 +2,16 @@
 
 $(document).ready(function () {
     update_servers();
+
+    $("#hidden-add-node").hide();
+    $("#add_node").click(function () {
+        $("#hidden-add-node").slideToggle("medium");
+    });
+
+    $("#wisdom_text").hide();
+    $("#add_wisdom").click(function () {
+        $("#wisdom_text").slideToggle("medium");
+    });
 });
 
 function createPill(text, bg = 'info', datainfo = undefined) {
@@ -71,9 +81,9 @@ function create_table(data) {
         // Public or Private Node?
         if (row.public == true) {
             datainfo = "Public servers are a privacy risk. They have access to your IP address that can be linked to searches and activity. They are good for checking overall status but don't use for specific address and transaction searches. Use with caution."
-            table += createPill('public node', 'danger', datainfo)
+            table += createPill('public node', 'dark', datainfo)
         } else {
-            table += createPill('private node', 'success', 'Running your own node provides a more private experience.')
+            table += createPill('private node', 'dark', 'Running your own node provides a more private experience.')
         }
         table += '</td>';
 
@@ -129,16 +139,10 @@ function create_table(data) {
         table += '<td class="text-end"><span class="badge bg-light">'
         table += '<a href="' + row.url + '" target="_blank"> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
         table += '</span></td>'
-
         // Close Row
         table += '</tr>';
     });
     // Include hidden line for new node inclusion
-    table += `<tr id="hidden-add-node">
-                <td colspan="7">
-                        <input type="text" class="form-control" placeholder="Enter New Node URL (onion addresses are accepted)">
-                </td>
-            </tr>`;
 
     // Close Table
     table += '</table>';

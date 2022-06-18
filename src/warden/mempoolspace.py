@@ -107,7 +107,10 @@ def is_synched(url):
     if max_tip == 'file not found':
         max_tip = 100
     result = tor_request(url + endpoint + str(max_tip))
-    r = result.text
+    try:
+        r = result.text
+    except Exception:
+        return False
     bad_response = 'Block height out of range'
     if r == bad_response:
         return False
@@ -147,7 +150,10 @@ def check_api_health(url, public):
     # ]
     status = None
     endpoint = 'api/blocks/tip/height'
-    result = tor_request(url + endpoint)
+    try:
+        result = tor_request(url + endpoint)
+    except Exception:
+        result = None
     # Response returned?
     if isinstance(result, requests.models.Response):
         # Got a 200 code OK back?
@@ -187,11 +193,14 @@ def check_api_health(url, public):
         server_statuses = pickle_it('load', 'mps_server_status.pkl')
         # Update previous status from this url to show it's offline
         for st in server_statuses:
-            if st['url'] == url:
-                status = st
-                status['online'] = False
-                server_statuses.remove(st)
-                server_statuses.append(status)
+            try:
+                if st['url'] == url:
+                    status = st
+                    status['online'] = False
+                    server_statuses.remove(st)
+                    server_statuses.append(status)
+            except Exception:
+                pass
         # Save pickle
 
         pickle_it('save', 'mps_server_status.pkl', server_statuses)

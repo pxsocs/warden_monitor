@@ -1,7 +1,9 @@
 import json
 from flask import Blueprint, current_app, render_template, request
 from flask_sock import Sock
+from random import randrange
 from utils import pickle_it
+from connections import tor_request
 
 sockets = Blueprint("sockets", __name__)
 sock = Sock(app=current_app)
@@ -20,6 +22,16 @@ def mempool_socket():
     templateData['base_url'] = 'http://raspberrypi.local:4080/'
     return render_template('sockets/ms_socket_connect.html', **templateData)
 
+
+@sockets.route("/satoshi_quotes_json", methods=['GET'])
+def satoshi_quotes_json():
+    url = 'https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json'
+    try:
+        quotes = tor_request(url).json()
+    except Exception:
+        return (json.dumps(' >> Error contacting server. Retrying... '))
+    quote = quotes[randrange(len(quotes))]
+    return (quote)
 
 
 @sockets.route('/socket_connect')

@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css?family=Allerta");
 @import url("https://fonts.googleapis.com/css?family=Lato:300,300italic");
+@import url("https://fonts.googleapis.com/css?family=Roboto+Mono:100");
 
 body {
   color: #c1c6cb;
@@ -20,6 +21,9 @@ html{
 
 .table-server {
   color: #c1c6cb;
+  overflow-x: scroll;
+  min-width: 200px;
+  table-layout: fixed;
 }
 
 .datainfo:hover {
@@ -33,6 +37,7 @@ html{
     border: 1px solid rgba(255, 255, 255, .1);
     border-radius: 4px;
     white-space: nowrap;
+    overflow-x: scroll;
     background-color: rgba(255, 255, 255, .1);
 }
 
@@ -291,3 +296,22 @@ json_area {
         padding: 0;}
 
 /* END Server CSS */
+
+
+/* Quote Box */
+
+.quotebox {
+  font-family:'Roboto Mono',monospace;
+
+  height:100%;
+  width:100%;
+  align-items:center;
+  display:flex;
+  font-weight:100;
+  font-size:85%;
+  color:#fafafa;
+}
+
+.dud{
+  color:#757575;
+}
