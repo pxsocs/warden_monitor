@@ -500,7 +500,7 @@ function copyTable(el) {
 }
 
 
-function timeDifference(current, previous) {
+function timeDifference(current, previous, precise = false) {
 
     var msPerMinute = 60 * 1000;
     var msPerHour = msPerMinute * 60;
@@ -515,7 +515,11 @@ function timeDifference(current, previous) {
     }
 
     if (elapsed < msPerMinute) {
-        return Math.round(elapsed / 1000) + ' seconds ago';
+        if (precise == false) {
+            return "Just Now"
+        } else {
+            return Math.round(elapsed / 1000) + ' seconds ago';
+        }
     }
 
     else if (elapsed < msPerHour) {
@@ -540,3 +544,59 @@ function timeDifference(current, previous) {
 }
 
 
+
+function pkl_grabber(pickle_file, interval_ms, target_element, status_element = undefined) {
+    const socket = new WebSocket("ws://" + location.host + "/pickle");
+    socket.addEventListener("message", (ev) => {
+        $(target_element).html(ev.data);
+    });
+
+    // Executes the function every 1000 milliseconds
+    const interval = setInterval(function () {
+        if (socket.readyState === WebSocket.CLOSED) {
+            if (status_element != undefined) {
+                $(status_element).html("<span style='color: red'>Disconnected</span>");
+            }
+            $(target_element).text("WebSocket Error -- Check if app is running");
+        } else {
+            socket.send(pickle_file);
+            if (status_element != undefined) {
+                $(status_element).html("<span style='color: darkgreen'>Connected</span>");
+            }
+        }
+    }, interval_ms);
+}
+
+
+function ajax_getter(url) {
+    // Note that this is NOT an asynchronous request.
+    return_data = "Empty Data";
+    $.ajax({
+        type: "GET",
+        dataType: 'json',
+        url: url,
+        async: false,
+        success: function (data) {
+            return_data = data
+        },
+        error: function (xhr, status, error) {
+            return_data = ("Error on request. status: " + status + " error:" + error);
+        }
+    });
+    return return_data;
+}
+
+// Sort a list of objects by a certain key
+function sortObj(list, key) {
+    function compare(a, b) {
+        a = a[key];
+        b = b[key];
+        var type = (typeof (a) === 'string' ||
+            typeof (b) === 'string') ? 'string' : 'number';
+        var result;
+        if (type === 'string') result = a.localeCompare(b);
+        else result = a - b;
+        return result;
+    }
+    return list.sort(compare);
+}

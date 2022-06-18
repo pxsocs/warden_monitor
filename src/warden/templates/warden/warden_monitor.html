@@ -3,29 +3,28 @@
 <!-- Node List -->
 
 <div class="col-12">
-  <div class="content-section table-responsive">
-    <h4 class="text-left">Private Nodes and Public Services</h4>
-    <table class="table table-condensed">
-      <thead>
-        <tr>
-          <th>Source</th>
-          <th class="text-center">Latest Block</th>
-          <th class="text-end">Updated</th>
-          <th class="text-end">Info</th>
-        </tr>
-      </thead>
-      <tbody>
-        {%for server in servers%}
-        <tr>
-          <th class="text-start">Unnamed</th>
-          <td class="text-center">{{server['tip_height']}}</td>
-          <td class="text-end">{{server['last_check'] | time_ago}}</td>
-          <td class="text-end">{{server['url']}}</td>
-        </tr>
-        {%endfor%}
-      </tbody>
-    </table>
+  <div class="row">
+    <div class="col-12">
+      <header class="text-left dashboard-header">
+        Private Nodes and Public Services
+
+        <span class="text-small float-end">
+          <a id="add_node" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-plus"></i>
+            New Node
+          </a>
+        </span>
+      </header>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="content-section" id="server_table">
+        <span class="text-small loadanim">Loading Servers...</span>
+      </div>
+    </div>
   </div>
 </div>
 
+<script src="{{url_for('static', filename='js/servers_update.js')}}"></script>
 {% endblock content %} {%block modals%} {% endblock modals %}

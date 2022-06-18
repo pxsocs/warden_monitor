@@ -38,6 +38,18 @@
       rel="stylesheet"
       href="{{url_for('static', filename='css/warden.css')}}"
     />
+
+  <!-- Bootstrap core JS-->
+    <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+    crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <!-- Helper Functions -->
+    <script src="{{url_for('static', filename='js/utils.js')}}"></script>
+
   </head>
 
   <body id="page-top">
@@ -46,7 +58,7 @@
 
    <nav class="navbar navbar-dark bg-steel navbar-expand-lg navbar-font justify-content-end">
 
-        <a class="navbar-brand" href="#page-top">WARden Monitor</a>
+        <a class="dashboard-header navbar-brand" href="#page-top">WARden Monitor</a>
         <button
           class="navbar-toggler navbar-toggler-right"
           type="button"
@@ -93,18 +105,18 @@
         <footer class="site-footer bg-steel small fixed-bottom">
 
             <div class="row text-white">
-                <div class="col-sm-4 text-left float-left">
+                <div class="col-sm-4 text-start float-left">
                     <i class="fab fa-github fa-lg text-white"></i>
                     &nbsp;&nbsp;<a class='text-white' style="text-decoration : none"
                         href='https://github.com/pxsocs/warden/'>
-                        Open Source code available at GitHub</a>
+                        Open Source Code</a>
                 </div>
 
                 <div class="col-sm-4 text-center">
 
                 </div>
 
-                <div class="col-sm-4 text-center float-right">Developed by
+                <div class="col-sm-4 text-end float-end">Developed by
                     <a class='text-white' style="text-decoration : none" href="https://twitter.com/alphaazeta">
                         <span class="text-white">@AlphaaZeta&nbsp;</span></a>
                 </div>
@@ -112,16 +124,7 @@
 
 
         </footer>
-    <!-- Bootstrap core JS-->
-    <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-    crossorigin="anonymous"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-
-    <!-- Helper Functions -->
-    <script src="{{url_for('static', filename='js/utils.js')}}"></script>
   </body>
 
 

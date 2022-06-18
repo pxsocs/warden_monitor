@@ -277,9 +277,12 @@ def init_app(app):
         pass
 
     # Start Schedulers for Backghround Tasks
-    from mempoolspace import check_all_servers
+    from mempoolspace import (check_all_servers, get_max_height)
+    from backgroundjobs import get_btc_price
     app.scheduler = BackgroundScheduler()
     app.scheduler.add_job(check_all_servers, 'interval', seconds=1)
+    app.scheduler.add_job(get_btc_price, 'interval', seconds=1)
+    app.scheduler.add_job(get_max_height, 'interval', seconds=1)
     app.scheduler.start()
 
     print(success("✅ Background jobs running"))
@@ -558,12 +561,12 @@ def main(debug=False, reloader=False):
     """)
 
     # Try to launch webbrowser and open the url
-    if "debug" not in sys.argv or "reloader" not in sys.argv:
-        try:
-            import webbrowser
-            webbrowser.open('http://localhost:' + str(port) + '/')
-        except Exception:
-            pass
+    # if "debug" not in sys.argv or "reloader" not in sys.argv:
+    #     try:
+    #         import webbrowser
+    #         webbrowser.open('http://localhost:' + str(port) + '/')
+    #     except Exception:
+    #         pass
 
     app.run(debug=debug,
             threaded=True,

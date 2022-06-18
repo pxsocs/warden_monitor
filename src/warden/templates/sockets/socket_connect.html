@@ -23,32 +23,11 @@
   </div>
 
   <script>
-    const socket = new WebSocket("ws://" + location.host + "/pickle");
-    socket.addEventListener("message", (ev) => {
-      $("#status").html("<span style='color: darkgreen'>Connected</span>");
-      $("#log").html(ev.data);
-    });
-
     document.getElementById("drop_pkl_list").onchange = (ev) => {
-      const pkl_chosen = document.getElementById("drop_pkl_list");
-
-      document.getElementById(
-        "variable_chosen"
-      ).innerHTML = `${pkl_chosen.value}`;
-
       ev.preventDefault();
-
-      // Executes the function every 1000 milliseconds
-      const interval = setInterval(function () {
-        if (socket.readyState === WebSocket.CLOSED) {
-          $("#status").html("<span style='color: red'>Disconnected</span>");
-          $("#log").text("WebSocket Error -- Check if app is running");
-        } else {
-          socket.send(pkl_chosen.value);
-          $("#status").html("<span style='color: darkgreen'>Connected</span>");
-          $("#log").html(ev.data);
-        }
-      }, 1000);
+      const pkl_chosen = document.getElementById("drop_pkl_list");
+      $("#variable_chosen").html(pkl_chosen.value);
+      pkl_grabber(pkl_chosen.value, 1000, "#log", "#status");
     };
   </script>
 </div>

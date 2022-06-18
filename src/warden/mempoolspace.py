@@ -2,9 +2,39 @@ from datetime import datetime
 from embit import bip32, script
 from embit.networks import NETWORKS
 import requests
+import threading
 import pandas as pd
 from utils import load_config, pickle_it, update_config
 from connections import tor_request, url_parser
+
+
+# Creates a list of URLs and names for the public and private addresses
+def server_names(action=None, url=None, name=None):
+    # These are already known names and urls
+    known_names = [
+        ('http://mempool.space/', 'mempool.space'),
+        ('http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/', 'mempool.space [onion]'),
+                   ]
+    custom_names = pickle_it('load', 'mps_custom_names.pkl')
+    if custom_names == 'file not found':
+        custom_names = []
+    all_names = custom_names + known_names
+    if action == None:
+        return all_names
+
+    # get a name from url
+    if action == 'get':
+        for element in all_names:
+            if element[0] == url:
+                return element[1]
+        return "Unknown"
+
+    # add name to url
+    if action == 'add':
+        name = 'Unknown' if name == None else name
+        custom_names.append((url, name))
+        pickle_it('save', 'mps_custom_names.pkl', custom_names)
+        return
 
 
 def mp_urls(action=None, url=None, public=True):
@@ -56,10 +86,46 @@ def mp_urls(action=None, url=None, public=True):
 
 def check_all_servers():
     mp_addresses = mp_urls()
-    for public_url in mp_addresses['public']:
-        check_api_health(public_url, public=True)
-    for personal_url in mp_addresses['private']:
-        check_api_health(personal_url, public=False)
+    public_threads = [
+        threading.Thread(target=check_api_health, args=(url, True))
+        for url in mp_addresses['public']
+    ]
+    personal_threads = [
+        threading.Thread(target=check_api_health, args=(url, False))
+        for url in mp_addresses['private']
+    ]
+    threads = public_threads + personal_threads
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+
+def is_synched(url):
+    endpoint = 'api/block-height/'
+    max_tip = pickle_it('load', 'max_tip_height.pkl')
+    if max_tip == 'file not found':
+        max_tip = 100
+    result = tor_request(url + endpoint + str(max_tip))
+    r = result.text
+    bad_response = 'Block height out of range'
+    if r == bad_response:
+        return False
+    else:
+        return True
+
+# Returns the highest block height in all servers
+def get_max_height():
+    # Load server list from pickle
+    server_list = pickle_it('load', 'mps_server_status.pkl')
+    # First store the max height of servers
+    max_tip_height = 0
+    for server in server_list:
+        tip = int(server['tip_height'])
+        max_tip_height = max(max_tip_height, tip)
+    # Save for later consumption
+    pickle_it('save', 'max_tip_height.pkl', max_tip_height)
+
 
 
 def check_api_health(url, public):
@@ -79,22 +145,30 @@ def check_api_health(url, public):
     #     "url": "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/"
     # },
     # ]
-
+    status = None
     endpoint = 'api/blocks/tip/height'
     result = tor_request(url + endpoint)
-    api_reachable = False
     # Response returned?
     if isinstance(result, requests.models.Response):
         # Got a 200 code OK back?
         if result.ok is True:
-            api_reachable = True
             # save the status to mps_server_status.pkl
             status = {
+                'online': True,
                 'public': public,
                 'url': url,
                 'last_check': datetime.utcnow(),
-                'tip_height': result.json()
+                'tip_height': result.json(),
+                'synched': is_synched(url)
             }
+
+            # Check which kind of address
+            status['onion'] = True if '.onion' in url else False
+            local_host_strings = ['localhost', '.local', '192.', '0.0.0.0']
+            status['localhost'] = True if any(host in url for host in local_host_strings) else False
+            # Check if named
+            status['name'] = server_names(action='get', url=url)
+
             # Load pickle
             server_statuses = pickle_it('load', 'mps_server_status.pkl')
             if server_statuses == 'file not found':
@@ -108,7 +182,21 @@ def check_api_health(url, public):
 
             # Save pickle
             pickle_it('save', 'mps_server_status.pkl', server_statuses)
-    return api_reachable
+    else:
+        # No response returned
+        server_statuses = pickle_it('load', 'mps_server_status.pkl')
+        # Update previous status from this url to show it's offline
+        for st in server_statuses:
+            if st['url'] == url:
+                status = st
+                status['online'] = False
+                server_statuses.remove(st)
+                server_statuses.append(status)
+        # Save pickle
+
+        pickle_it('save', 'mps_server_status.pkl', server_statuses)
+
+    return status
 
 
 def get_address_utxo(url, address):
