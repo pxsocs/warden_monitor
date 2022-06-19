@@ -52,7 +52,7 @@
 
   </head>
 
-  <body id="page-top">
+<body id="page-top">
     <!-- Navigation-->
 
 
@@ -86,21 +86,24 @@
 
     <!-- Main Content -->
 <div class="container-fluid">
-    <div class="row">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %} {% for category, message in messages %}
-      <div class="col">
-        <div id="alertsection">
-          <div id="messagealert" class="alert alert-{{ category }}">
-            {{message}}
-          </div>
-        </div>
-      </div>
-      {% endfor %} {% endif %} {% endwith %}
 
+    <div class="row" id='message_alert_area' hide>
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %} {% for category, message in messages %}
+        <div class="col">
+            <div id="messagealert" class="alert alert-{{ category }}">
+              {{message}}
+            </div>
+        </div>
+        {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <div class="row" id='main_body'>
       <div class="col">{% block content %} {% endblock %}</div>
     </div>
+
 </div>
+
     <!-- Footer -->
         <footer class="site-footer bg-steel small fixed-bottom">
 

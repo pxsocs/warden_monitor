@@ -2,9 +2,21 @@
 
 // Slider Formatting and funcionality
 
-$(document).ready(function () {
 
-});
+function send_message(message, bg = 'info') {
+    var uniqid = Date.now();
+    message_element = '#message_alert_area';
+    new_html = `
+    <div class="col">
+        <div id='${uniqid}' class="alert alert-${bg} alert-dismissible" role="alert" data-alert="alert">
+            <strong>${message}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+    `;
+    $(message_element).html(new_html);
+    $(message_element).show("medium");
+}
 
 
 (function ($) {

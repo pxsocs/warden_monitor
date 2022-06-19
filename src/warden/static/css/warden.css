@@ -329,3 +329,8 @@ json_area {
 .dud{
   color:#757575;
 }
+
+.alert {
+  font-size: 80%;
+   height:70%;
+}

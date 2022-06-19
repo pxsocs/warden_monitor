@@ -46,70 +46,88 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-12" id="hidden-add-node" style="padding-bottom: 10px">
+  <div
+    class="row"
+    id="hidden-add-node"
+    style="padding-top: 10px; padding-bottom: 10px"
+  >
+
+    <div class="col-4">
+      <input id = 'new_node_name' type="text" class="form-control" placeholder="Node Name" />
+    </div>
+
+    <div class="col-6">
       <input
+        id = 'new_node_url'
         type="text"
         class="form-control"
-        placeholder="Enter New Node URL (onion addresses are accepted)"
+        placeholder="Node URL (onion addresses are accepted)"
       />
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-12">
-      <div class="content-section" id="server_table">
-        <span class="text-small loadanim">Loading Servers...</span>
-      </div>
+    <div class="col-2 text-end align-end">
+      <button id="save_node" class="btn btn-outline-light btn-block">
+        <i class="fas fa-plus"></i>
+        save
+      </button>
     </div>
   </div>
 
-  <!-- Satoshi Quotes -->
-  <div class="row" style="padding-top: 20px">
-    <div class="col-12">
-      <header class="text-left dashboard-header">
-        Satoshi Nakamoto
-        <span class="text-small float-end">
-          <button id="add_wisdom" class="btn btn-outline-light btn-sm">
-            <i class="fas fa-plus"></i>
-            wisdom
-          </button>
-        </span>
-      </header>
-    </div>
-  </div>
-
-  <div class="row" id="wisdom_text" style="padding-top: 20px">
-    <div class="col-12">
-      <div class="quotebox">
-        <div class="text"></div>
-      </div>
-    </div>
     <div class="row">
-      <div class="col-12 text-start">
-        <footer style="padding-top: 20px" class="blockquote-footer">
-          Satoshi Nakamoto in
-          <cite id="load_source" title="Source Title">...</cite>
-        </footer>
-        <footer class="blockquote-footer">
-          <cite id="load_date">...</cite>
-        </footer>
-        <small>
-          Source:
-          <a
-            href="https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json"
-            target="_blank"
-            >Nakamoto Institute</a
-          >
-        </small>
+      <div class="col-12">
+        <div class="content-section" id="server_table">
+          <span class="text-small loadanim">Loading Servers...</span>
+        </div>
       </div>
     </div>
-  </div>
-  <script src="{{url_for('static', filename='js/utils.js')}}"></script>
-  <script src="{{url_for('static', filename='js/satoshi_quotes.js')}}"></script>
-  <script src="{{url_for('static', filename='js/servers_update.js')}}"></script>
-  <script src="{{url_for('static', filename='js/text_scrambler.js')}}"></script>
-  <script src="{{url_for('static', filename='js/animate_number.js')}}"></script>
 
-  {% endblock content %} {%block modals%} {% endblock modals %}
+    <!-- Satoshi Quotes -->
+    <div class="row" style="padding-top: 20px">
+      <div class="col-12">
+        <header class="text-left dashboard-header">
+          Satoshi Nakamoto
+          <span class="text-small float-end">
+            <button id="add_wisdom" class="btn btn-outline-light btn-sm">
+              <i class="fas fa-plus"></i>
+              wisdom
+            </button>
+          </span>
+        </header>
+      </div>
+    </div>
+
+    <div class="row" id="wisdom_text" style="padding-top: 20px">
+      <div class="col-12">
+        <div class="quotebox">
+          <div class="text"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-start">
+          <footer style="padding-top: 20px" class="blockquote-footer">
+            Satoshi Nakamoto in
+            <cite id="load_source" title="Source Title">...</cite>
+          </footer>
+          <footer class="blockquote-footer">
+            <cite id="load_date">...</cite>
+          </footer>
+          <small>
+            Source:
+            <a
+              href="https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json"
+              target="_blank"
+              >Nakamoto Institute</a
+            >
+          </small>
+        </div>
+      </div>
+    </div>
+    <script src="{{url_for('static', filename='js/utils.js')}}"></script>
+    <script src="{{url_for('static', filename='js/satoshi_quotes.js')}}"></script>
+    <script src="{{url_for('static', filename='js/servers_update.js')}}"></script>
+    <script src="{{url_for('static', filename='js/text_scrambler.js')}}"></script>
+    <script src="{{url_for('static', filename='js/animate_number.js')}}"></script>
+
+    {% endblock content %} {%block modals%} {% endblock modals %}
+  </div>
 </div>

@@ -12,6 +12,12 @@ $(document).ready(function () {
         $("#hidden-add-node").slideToggle("medium");
     });
 
+    // New node being included
+    $("#save_node").click(function () {
+        send_message('Including Note. Please Wait...', 'info');
+        send_message('Node Included', 'success');
+    });
+
     $("#wisdom_text").hide();
     $("#add_wisdom").hide();
     $("#add_wisdom").click(function () {
@@ -203,7 +209,16 @@ function create_table(data) {
         // Save the max tip height for later
         max_tip_height = row.max_tip_height;
         progress = (tip_height / max_tip_height) * 100;
-        progress_bar = createProgress(formatNumber(progress, 0, '', '%'), progress, 'success', 'Block height');
+        if (progress < 95) {
+            bg = 'warning'
+        }
+        if (progress < 80) {
+            bg = 'danger'
+        }
+        if (progress >= 95) {
+            bg = 'success'
+        }
+        progress_bar = createProgress(formatNumber(progress, 0, '', '%'), progress, bg, 'Block height');
 
         table += `<td class="text-center small-text"> ${formatNumber(tip_height, 0)} / ${formatNumber(max_tip_height, 0)} ${progress_bar} </td>`;
 
