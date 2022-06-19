@@ -17,6 +17,7 @@ function satoshi_refresh() {
             $('#load_source').html(data['medium']);
             $('#load_date').html(data['date']);
             $('#subject').html(data['category']);
+            $("#add_wisdom").show();
         },
         error: function (xhr, status, error) {
             console.log(status);

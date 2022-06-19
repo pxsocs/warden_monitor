@@ -1,6 +1,8 @@
+@import url("https://fonts.googleapis.com/css?family=Orbitron");
 @import url("https://fonts.googleapis.com/css?family=Allerta");
 @import url("https://fonts.googleapis.com/css?family=Lato:300,300italic");
 @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:100");
+
 
 body {
   color: #c1c6cb;
@@ -22,8 +24,6 @@ html{
 .table-server {
   color: #c1c6cb;
   overflow-x: scroll;
-  min-width: 200px;
-  table-layout: fixed;
 }
 
 .datainfo:hover {
@@ -31,9 +31,7 @@ html{
 }
 
 .content-section {
-    display: flex;
-    align-items: center;
-    padding: 10px 0;
+    padding: 10px 10px;
     border: 1px solid rgba(255, 255, 255, .1);
     border-radius: 4px;
     white-space: nowrap;
@@ -272,6 +270,22 @@ json_area {
         font-family: 'Lato', sans-serif;
         text-transform: uppercase;
     }
+
+.dashboard-numbers {
+        align-items: center;
+        font-weight: lighter;
+        font-size: 115%;
+        color: rgb(218, 255, 188)
+        }
+
+.clock {
+      align-items: center;
+        padding-top: -40px;
+        font-size: 65%;
+        font-weight: lighter;
+        color: rgb(255, 255, 255)
+        }
+
 
 .server {
     display: flex;

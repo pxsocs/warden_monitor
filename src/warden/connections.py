@@ -121,12 +121,12 @@ def tor_request(url, tor_only=False, method="get", headers=None):
     if '.local' in url or '127.0.0.1' in url or 'localhost' in url:
         try:
             if method == "get":
-                request = requests.get(url, timeout=20)
+                request = requests.get(url, timeout=60)
             if method == "post":
-                request = requests.post(url, timeout=20)
+                request = requests.post(url, timeout=60)
             return (request)
 
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError or requests.exceptions.ReadTimeout:
             return "ConnectionError"
 
     if TOR["status"] is True:

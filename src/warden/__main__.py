@@ -277,12 +277,15 @@ def init_app(app):
         pass
 
     # Start Schedulers for Backghround Tasks
-    from mempoolspace import (check_all_servers, get_max_height)
+    from mempoolspace import (check_all_servers, get_max_height,
+                              check_all_sync_status)
     from backgroundjobs import get_btc_price
     app.scheduler = BackgroundScheduler()
     app.scheduler.add_job(check_all_servers, 'interval', seconds=1)
     app.scheduler.add_job(get_btc_price, 'interval', seconds=1)
     app.scheduler.add_job(get_max_height, 'interval', seconds=1)
+    app.scheduler.add_job(check_all_sync_status, 'interval', seconds=20)
+
     app.scheduler.start()
 
     print(success("✅ Background jobs running"))

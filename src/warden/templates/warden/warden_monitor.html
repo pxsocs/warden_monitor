@@ -2,23 +2,29 @@
 <div class="col-12">
   <!-- dashboard -->
   <div class="row">
-    <div class="col-12">
-      <header class="text-left dashboard-header">Dashboard</header>
+    <div class="col-3">
+      <div
+        class="text-start"
+        data-toggle="tooltip"
+        data-placement="top"
+        title="Refers to the block height of the valid chain with the most proof of work"
+      >
+        <span class="dashboard-numbers" id="max_height"> Loading... </span>
+        <br />
+        <span class="clock">block height</span>
+      </div>
     </div>
-  </div>
+    <div class="col-3"></div>
 
-  <div class="row">
+    <div class="col-3"></div>
+
     <div class="col-3">
-      <div class="content-section">Latest Price</div>
-    </div>
-    <div class="col-3">
-      <div class="content-section">Latest Price</div>
-    </div>
-    <div class="col-3">
-      <div class="content-section">Latest Price</div>
-    </div>
-    <div class="col-3">
-      <div class="content-section">Latest Price</div>
+      <div class="text-end">
+        <span class="dashboard-numbers" id="price_section"> Loading... </span
+        ><br />
+
+        <span class="clock" id="clock_section"> </span>
+      </div>
     </div>
   </div>
 
@@ -59,7 +65,7 @@
   </div>
 
   <!-- Satoshi Quotes -->
-  <div class="row">
+  <div class="row" style="padding-top: 20px">
     <div class="col-12">
       <header class="text-left dashboard-header">
         Satoshi Nakamoto
@@ -73,7 +79,7 @@
     </div>
   </div>
 
-  <div class="row" id="wisdom_text">
+  <div class="row" id="wisdom_text" style="padding-top: 20px">
     <div class="col-12">
       <div class="quotebox">
         <div class="text"></div>
@@ -103,6 +109,7 @@
   <script src="{{url_for('static', filename='js/satoshi_quotes.js')}}"></script>
   <script src="{{url_for('static', filename='js/servers_update.js')}}"></script>
   <script src="{{url_for('static', filename='js/text_scrambler.js')}}"></script>
+  <script src="{{url_for('static', filename='js/animate_number.js')}}"></script>
 
   {% endblock content %} {%block modals%} {% endblock modals %}
 </div>
