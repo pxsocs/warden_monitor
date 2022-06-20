@@ -14,8 +14,41 @@ $(document).ready(function () {
 
     // New node being included
     $("#save_node").click(function () {
-        send_message('Including Note. Please Wait...', 'info');
-        send_message('Node Included', 'success');
+
+        node_name = $("#new_node_name").val();
+        node_url = $("#new_node_url").val();
+        is_private_node = document.getElementById("is_private_node");
+        is_private_node = is_private_node.checked;
+        send_message(`including node ${node_name}. please wait...`, 'info');
+
+        $.ajax({
+            type: "POST",
+            contentType: 'application/json',
+            dataType: "json",
+            data: JSON.stringify({
+                ["node_name"]: node_name,
+                ["node_url"]: node_url,
+                ["is_private_node"]: is_private_node
+            }),
+            url: "/node_action",
+            success: function (data_back) {
+                console.log(data_back);
+                if (data_back == 'success') {
+                    send_message(`node ${node_name} added successfully. Please allow a few seconds before it shows in the list.`, 'success');
+                } else {
+                    send_message(`node ${node_name} failed to be included. Error: ${data_back}`, 'warning');
+                }
+                $("#hidden-add-node").slideToggle("medium");
+            },
+            error: function (xhr, status, error) {
+                console.log(status);
+                console.log(error);
+                alerts_html = $('#alerts').html();
+                send_message(`an error occured while adding node. message: ${status} | ${error}`, 'danger')
+            }
+        });
+
+
     });
 
     $("#wisdom_text").hide();

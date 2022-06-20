@@ -28,6 +28,7 @@ def server_names(action=None, url=None, name=None, public=True):
     # If the file does not exist, add the standard names above
     if custom_names == 'file not found':
         custom_names = known_names
+        pickle_it('save', 'mps_custom_names.pkl', custom_names)
 
     if action == None or action == 'list_all' or action == 'list':
         return custom_names
@@ -70,7 +71,7 @@ def server_names(action=None, url=None, name=None, public=True):
                 pass
         # Save pickle
 
-        pickle_it('save', 'mps_custom_names.pkl', custom_names)
+    pickle_it('save', 'mps_custom_names.pkl', custom_names)
 
     return custom_names
 

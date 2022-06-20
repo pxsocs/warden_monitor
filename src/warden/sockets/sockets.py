@@ -3,7 +3,8 @@ from flask import Blueprint, current_app, render_template, request
 from flask_sock import Sock
 from random import randrange
 from utils import pickle_it
-from connections import tor_request
+from connections import tor_request, url_parser
+from mempoolspace import server_names
 
 sockets = Blueprint("sockets", __name__)
 sock = Sock(app=current_app)
@@ -13,6 +14,10 @@ templateData = {
     "FX": current_app.settings['PORTFOLIO']['base_fx'],
     "current_app": current_app,
 }
+
+# ---------------------------
+#  API Functions
+# ---------------------------
 
 
 @sockets.route('/mempool_socket')
@@ -34,12 +39,32 @@ def satoshi_quotes_json():
     return (quote)
 
 
+@sockets.route("/node_action", methods=['GET', 'POST'])
+def node_action():
+    # When asked to GET, will return the current list of nodes
+    if request.method == 'GET':
+        node_list = server_names()
+        return (json.dumps(node_list))
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.data)
+            url = url_parser(data['node_url'])
+            server_names('add',
+                         url=url,
+                         name=data['node_name'],
+                         public=not (data['is_private_node']))
+            return json.dumps("success")
+        except Exception as e:
+            return (f"Error: {e}")
+
+
 @sockets.route('/socket_connect')
 def socket_connect():
     # get a list of .pkl files in the pickle directory
     templateData['title'] = "WebSocket Connection"
     templateData['pkl_files'] = pickle_it(action='list')
     return render_template('sockets/socket_connect.html', **templateData)
+
 
 # Gets a local pickle file and dumps - does not work with pandas df
 # Do not include extension pkl on argument
@@ -59,6 +84,10 @@ def get_pickle():
     else:
         return (json.dumps(data_loader, default=str))
 
+
+# ---------------------------
+#  Web Socket Functions
+# ---------------------------
 
 
 @sock.route('/pickle')
@@ -81,4 +110,3 @@ def echo(ws):
     while True:
         data = ws.receive()
         ws.send(data)
-
