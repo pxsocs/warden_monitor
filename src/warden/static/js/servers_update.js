@@ -45,7 +45,7 @@ function update_clock_content() {
 }
 
 function update_max_height() {
-    interval_ms_price = 1000;
+    interval_ms_height = 1000;
     const interval = setInterval(function () {
         target = '#max_height';
         url = '/get_pickle?filename=max_tip_height&serialize=False';
@@ -73,7 +73,7 @@ function update_max_height() {
                 decimals: 0
             });
         }
-    }, interval_ms_price);
+    }, interval_ms_height);
 
 
 }
@@ -102,8 +102,26 @@ function update_price() {
                 online = false
                 return
             }
+
+            // Check if price is current or outdated
+            price_updated = new Date(latest_price['time'] + 'Z').toISOString()
+            price_updated = new Date(price_updated).getTime();
+            // Updated current time
+            isoDateString = new Date().toISOString();
+            currentTimeStamp = new Date(isoDateString).getTime()
+            // Get a string of difference
+            difference_numb = currentTimeStamp - price_updated;
+            difference_str = timeDifference(currentTimeStamp, price_updated)
+            minutes_ago = difference_numb / 1000 / 60
+            if (minutes_ago >= 3) {
+                $(target).html("<span class='text-muted'>" + (formatNumber(latest_price['price'], 2, "$ ")) + "</span>");
+                $('#price_info').html("price feed delayed <br> last updated " + difference_str);
+                return
+            }
+
             online = true
-            $('#price_section').animate_number({
+            $('#price_info').html("");
+            $(target).animate_number({
                 start_value: initial_price,
                 end_value: current_price,
                 duration: 500,

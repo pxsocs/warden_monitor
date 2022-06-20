@@ -600,17 +600,23 @@ function ajax_getter(url) {
 
 // Sort a list of objects by a certain key
 function sortObj(list, key) {
-    function compare(a, b) {
-        a = a[key];
-        b = b[key];
-        var type = (typeof (a) === 'string' ||
-            typeof (b) === 'string') ? 'string' : 'number';
-        var result;
-        if (type === 'string') result = a.localeCompare(b);
-        else result = a - b;
-        return result;
+    try {
+        function compare(a, b) {
+            a = a[key];
+            b = b[key];
+            var type = (typeof (a) === 'string' ||
+                typeof (b) === 'string') ? 'string' : 'number';
+            var result;
+            if (type === 'string') result = a.localeCompare(b);
+            else result = a - b;
+            return result;
+        }
+        return list.sort(compare);
+    } catch (e) {
+        console.log("Error sorting list: " + e);
+        return list;
+
     }
-    return list.sort(compare);
 }
 
 // source: https://stackoverflow.com/questions/64254355/cut-string-into-chunks-without-breaking-words-based-on-max-length
