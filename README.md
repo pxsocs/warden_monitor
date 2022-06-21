@@ -23,6 +23,7 @@ Then to run:
 
 ```bash
 source myenv/bin/activate
+cd src
 python3 warden
 ```
 
