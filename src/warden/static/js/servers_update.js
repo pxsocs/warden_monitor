@@ -7,6 +7,7 @@ $(document).ready(function () {
     update_clock();
     update_max_height();
     update_block_details();
+    update_stats();
 
     $("#hidden-add-node").hide();
     $("#add_node").click(function () {
@@ -75,8 +76,6 @@ function update_block_details() {
         updated_time = new Date(updated_time).getTime()
         loaded_time = block_details['timestamp']
         loaded_time = loaded_time * 1000
-        console.log(updated_time)
-        console.log(loaded_time)
         time_difference = timeDifference(currentTimeStamp, loaded_time).toLowerCase();
 
         if (block_details == 'file not found') {
@@ -159,6 +158,52 @@ function update_max_height() {
 }
 
 
+function update_stats() {
+    interval_stats = 1000;
+    const interval = setInterval(function () {
+        target = '#stats';
+        url = '/get_pickle?filename=nodes_status&serialize=False';
+        stats = ajax_getter(url);
+        if (stats == 'file not found') {
+            return
+        } else {
+            html = `
+            <div class="row">
+            <div class="col">
+                <div class="text-center">
+                    <span class="dashboard-numbers"> ${stats['total_nodes']} </span><br/><hr>
+                    <span class="clock"> total nodes </span>
+                </div>
+            </div>
+            <div class="col">
+                <div class="text-center">
+                    <span class="dashboard-numbers"> ${stats['online']} </span><br/><hr>
+                    <span class="clock"> online </span>
+                </div>
+            </div>
+            <div class="col">
+                <div class="text-center">
+                    <span class="dashboard-numbers"> ${stats['at_tip']} </span><br/><hr>
+                    <span class="clock"> at latest block </span>
+                </div>
+            </div>
+            <div class="col">
+                <div class="text-center">
+                    <span class="dashboard-numbers"> ${stats['onion']} </span><br/><hr>
+                    <span class="clock"> tor nodes </span>
+                </div>
+            </div>
+            </div>
+            `
+
+            $(target).html(html);
+        }
+    }, interval_stats);
+
+
+}
+
+
 
 function update_price() {
     interval_ms_price = 1000;
@@ -204,7 +249,7 @@ function update_price() {
             }
 
             online = true
-            $('#price_info').html("");
+            $('#price_info').html("NgU Tech");
             $(target).animate_number({
                 start_value: initial_price,
                 end_value: current_price,

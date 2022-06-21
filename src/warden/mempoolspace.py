@@ -349,6 +349,24 @@ def get_node_full_data():
     return full_list
 
 
+# get a set of statistics from the nodes
+def nodes_status():
+    stats = {}
+    # Load node info
+    full_data = get_node_full_data()
+    max_height = get_max_height()
+    stats['check_time'] = datetime.utcnow()
+    stats['total_nodes'] = len(full_data)
+    stats['online'] = sum(x.get('online') == True for x in full_data)
+    stats['is_public'] = sum(x.get('is_public') == True for x in full_data)
+    stats['synched'] = sum(x.get('synched') == True for x in full_data)
+    stats['onion'] = sum(x.get('onion') == True for x in full_data)
+    stats['localhost'] = sum(x.get('localhost') == True for x in full_data)
+    stats['at_tip'] = sum(x.get('tip_height') == max_height for x in full_data)
+    pickle_it('save', 'nodes_status.pkl', stats)
+    return (stats)
+
+
 def get_address_utxo(url, address):
     # Endpoint
     # GET /api/address/:address/utxo

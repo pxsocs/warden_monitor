@@ -53,7 +53,7 @@ class TestMPS(unittest.TestCase):
                 "Testing if public instance of mempool space is reachable...")
             for public_url in mp_addresses['public']:
                 print(f"Testing {public_url}")
-                result = check_api_health(public_url, public=True)
+                result = check_api_health(public_url)
                 if result == True:
                     print("[OK] Connection to " + public_url +
                           " was successful")

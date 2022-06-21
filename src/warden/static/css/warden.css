@@ -268,6 +268,14 @@ json_area {
 }
 
 
+hr {
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
 /* Server CSS */
 .dashboard-header {
         padding-top: 10px;
@@ -279,8 +287,9 @@ json_area {
 .dashboard-numbers {
         align-items: center;
         font-weight: lighter;
-        font-size: 115%;
-        color: rgb(218, 255, 188)
+        font-size: 130%;
+        color: rgb(237, 255, 222);
+        width:100%;
         }
 
 .clock {

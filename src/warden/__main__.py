@@ -278,7 +278,8 @@ def init_app(app):
 
     # Start Schedulers for Backghround Tasks
     from mempoolspace import (check_all_servers, get_max_height,
-                              most_updated_server, get_last_block_info)
+                              most_updated_server, get_last_block_info,
+                              nodes_status)
     from backgroundjobs import get_btc_price
     app.scheduler = BackgroundScheduler()
     app.scheduler.add_job(check_all_servers, 'interval', seconds=1)
@@ -286,6 +287,7 @@ def init_app(app):
     app.scheduler.add_job(get_max_height, 'interval', seconds=1)
     app.scheduler.add_job(most_updated_server, 'interval', seconds=1)
     app.scheduler.add_job(get_last_block_info, 'interval', seconds=1)
+    app.scheduler.add_job(nodes_status, 'interval', seconds=1)
 
     app.scheduler.start()
 
