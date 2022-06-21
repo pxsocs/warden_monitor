@@ -29,6 +29,17 @@ def internet_connected(host="8.8.8.8", port=53, timeout=3):
     return (connected)
 
 
+def url_reachable(url):
+    request = tor_request(url)
+    try:
+        if request == 'ConnectionError':
+            return False
+        else:
+            return True
+    except Exception:
+        return True
+
+
 def test_tor():
     response = {}
     session = requests.session()

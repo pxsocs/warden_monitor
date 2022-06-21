@@ -183,3 +183,9 @@ def is_port_in_use(port: int) -> bool:
     import socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
+
+
+def safe_filename(s):
+    return ("".join([
+        c for c in s if c.isalpha() or c.isdigit() or c == '_' or c == '-'
+    ]).rstrip())

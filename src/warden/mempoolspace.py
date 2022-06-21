@@ -1,11 +1,11 @@
 from datetime import datetime
+from fileinput import filename
 from embit import bip32, script
 from embit.networks import NETWORKS
-import requests
 import threading
 import pandas as pd
-from utils import pickle_it
-from connections import tor_request
+from utils import pickle_it, safe_filename
+from connections import tor_request, url_reachable
 
 
 # Creates a list of URLs and names for the public and private addresses
@@ -110,19 +110,24 @@ def is_synched(url):
 
 # Returns the highest block height in all servers
 def get_max_height():
-    # Load server list from pickle
-    server_list = pickle_it('load', 'mps_server_status.pkl')
-
     max_tip_height = pickle_it('load', 'max_tip_height.pkl')
     if max_tip_height == 'file not found':
         max_tip_height = 0
+    max_tip_height = 0
 
-    for server in server_list:
+    # Load server list from pickle
+    servers = server_names()
+    for server in servers:
+        end_point = 'api/blocks/tip/height'
+        url = server[0]
+        highest_block = tor_request(url + end_point)
         try:
-            tip = int(server['max_tip_height'])
+            highest_block = int(highest_block.text)
         except Exception:
-            tip = 0
-        max_tip_height = max(max_tip_height, tip)
+            highest_block = 0
+
+        max_tip_height = max(max_tip_height, highest_block)
+
     # Save for later consumption
     pickle_it('save', 'max_tip_height.pkl', max_tip_height)
     return max_tip_height
@@ -169,19 +174,6 @@ def get_sync_height(url):
         return current_check
 
 
-def check_all_sync_status():
-    # Load server list from pickle
-    server_list = pickle_it('load', 'mps_server_status.pkl')
-    for server in server_list:
-        server['tip_height'] = get_sync_height(server['url'])
-        # Remove previous status from this url
-        for st in server_list:
-            if st['url'] == server['url']:
-                server_list.remove(st)
-        server_list.append(server)
-    pickle_it('save', 'mps_server_status.pkl', server_list)
-
-
 def check_block(url, block):
     end_point = 'api/block-height/'
     try:
@@ -192,94 +184,115 @@ def check_block(url, block):
     return result
 
 
-def check_api_health(url):
-    # Check if API is reachable and saves the latest status in a pickle
-    # formatted like the below:
-    # [
-    # {
-    #     "last_check": "2022-06-12 13:54:16.178834",
-    #     "public": true,
-    #     "tip_height": 740493,
-    #     "url": "https://mempool.space/"
-    # },
-    # {
-    #     "last_check": "2022-06-12 13:54:21.894870",
-    #     "public": true,
-    #     "tip_height": 740493,
-    #     "url": "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/"
-    # },
-    # ]
-    status = None
-    endpoint = 'api/blocks/tip/height'
+# Check if this url is a mempool.space API
+def is_url_mp_api(url):
+    end_point = endpoint = 'api/blocks/tip/height'
+    requests = tor_request(url + end_point)
     try:
-        is_public = server_names('get_info', url)[2]
+        if requests.status_code == 200:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+
+def check_api_health(url):
+    # . Reachable
+    # . ping time
+    # . Last time reached
+    # . Mempool API active
+    # . Tip_height (Reurning null some times)
+    # . Current Block Height
+    # . is_tor
+    # . is_localhost
+    # . name
+    # . progress
+    # . blocks behind
+
+    # make a safe filename for this url
+    filename = "save_status/" + safe_filename(url) + '.pkl'
+
+    if url is None:
+        return None
+
+    # Get name info for this server
+    server_data = server_names('get_info', url)
+
+    # Load previous status
+    previous_state = pickle_it('load', filename)
+
+    if previous_state == 'file not found':
+        current_state = {
+            'filename': filename,
+            'name': 'loading...',
+            'url': url,
+            'online': 'loading...',
+            'is_public': 'loading...',
+            'last_check': "Never",
+            'max_tip_height': "loading...",
+            'tip_height': "loading...",
+            'synched': "loading...",
+        }
+    else:
+        current_state = previous_state
+
+    # Public or Private Node?
+    try:
+        current_state['is_public'] = server_data[2]
     except IndexError:
         # If not found default to public as a precaution
-        is_public = True
+        current_state['is_public'] = True
 
+    # Save Name
+    current_state['name'] = server_data[1]
+
+    # Check if online
+    current_state['online'] = url_reachable(url)
+
+    # Check if API is working
+    current_state['mps_api_reachable'] = is_url_mp_api(url)
+
+    if current_state['mps_api_reachable'] == True:
+        current_state['last_check'] = datetime.utcnow()
+
+    # This endpoint will get the tip height with most proof of work
+    endpoint = 'api/blocks/tip/height'
     try:
         result = tor_request(url + endpoint)
+        current_state['max_tip_height'] = int(result.json())
     except Exception:
-        result = None
-    # Response returned?
-    if isinstance(result, requests.models.Response):
-        # Got a 200 code OK back?
-        if result.ok is True:
-            # save the status to mps_server_status.pkl
-            status = {
-                'online': True,
-                'public': is_public,
-                'url': url,
-                'last_check': datetime.utcnow(),
-                'max_tip_height': result.json(),
-                'synched': is_synched(url)
-            }
+        current_state['max_tip_height'] = 0
 
-            # Check which kind of address
-            status['onion'] = True if '.onion' in url else False
-            local_host_strings = ['localhost', '.local', '192.', '0.0.0.0']
-            status['localhost'] = True if any(
-                host in url for host in local_host_strings) else False
-            # Check if named
-            status['name'] = server_names(action='get', url=url)
+    # Check tip height of this node
+    current_state['tip_height'] = get_sync_height(url)
 
-            # Load pickle
-            server_statuses = pickle_it('load', 'mps_server_status.pkl')
-            if server_statuses == 'file not found':
-                server_statuses = [status]
-            else:
-                # Remove previous status from this url
-                for st in server_statuses:
-                    if st['url'] == url:
-                        # First get some attributes that are not updated in
-                        # this method
-                        if 'tip_height' in st:
-                            status['tip_height'] = st['tip_height']
-                        else:
-                            status['tip_height'] = None
-                        server_statuses.remove(st)
-                server_statuses.append(status)
+    # Check if synched
+    current_state['synched'] = is_synched(url)
 
-            # Save pickle
-            pickle_it('save', 'mps_server_status.pkl', server_statuses)
-    else:
-        # No response returned
-        server_statuses = pickle_it('load', 'mps_server_status.pkl')
-        # Update previous status from this url to show it's offline
-        for st in server_statuses:
-            try:
-                if st['url'] == url:
-                    status = st
-                    status['online'] = False
-                    server_statuses.remove(st)
-                    server_statuses.append(status)
-            except Exception:
-                pass
-        # Save pickle
+    # Other data
+    current_state['onion'] = True if '.onion' in url else False
 
-        pickle_it('save', 'mps_server_status.pkl', server_statuses)
+    local_host_strings = ['localhost', '.local', '192.', '0.0.0.0']
+    current_state['localhost'] = True if any(
+        host in url for host in local_host_strings) else False
 
-    return status
+    # Save pickle
+    pickle_it('save', filename, current_state)
+
+    return current_state
+
+
+def get_node_full_data():
+    node_list = server_names()
+    full_list = []
+    for server in node_list:
+        url = server[0]
+        filename = "save_status/" + safe_filename(url) + '.pkl'
+        server_file = pickle_it('load', filename)
+        if server_file != 'file not found':
+            full_list.append(server_file)
+    return full_list
 
 
 def get_address_utxo(url, address):

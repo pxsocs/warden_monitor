@@ -24,7 +24,6 @@ templateData = {
 @warden.route("/warden_monitor", methods=['GET'])
 def main_page():
     templateData['title'] = "WARden Node Monitor"
-    templateData['servers'] = pickle_it('load', 'mps_server_status.pkl')
     return (render_template('warden/warden_monitor.html', **templateData))
 
 

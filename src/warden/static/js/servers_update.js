@@ -20,23 +20,24 @@ $(document).ready(function () {
         is_private_node = document.getElementById("is_private_node");
         is_private_node = is_private_node.checked;
         send_message(`including node ${node_name}. please wait...`, 'info');
+        data = {
+            ["node_name"]: node_name,
+            ["node_url"]: node_url,
+            ["is_private_node"]: is_private_node
+        }
+        json_data = JSON.stringify(data)
 
         $.ajax({
             type: "POST",
             contentType: 'application/json',
             dataType: "json",
-            data: JSON.stringify({
-                ["node_name"]: node_name,
-                ["node_url"]: node_url,
-                ["is_private_node"]: is_private_node
-            }),
+            data: json_data,
             url: "/node_action",
             success: function (data_back) {
-                console.log(data_back);
                 if (data_back == 'success') {
-                    send_message(`node ${node_name} added successfully. Please allow a few seconds before it shows in the list.`, 'success');
+                    send_message(`Node ${node_name} added successfully. Please allow a few seconds before it shows in the list.`, 'success');
                 } else {
-                    send_message(`node ${node_name} failed to be included. Error: ${data_back}`, 'warning');
+                    send_message(`Node ${node_name} failed to be included.<br> Error: ${data_back}`, 'warning');
                 }
                 $("#hidden-add-node").slideToggle("medium");
             },
@@ -129,7 +130,11 @@ function update_price() {
                 initial_price = 0;
             }
             // Grab latest price
-            current_price = parseFloat(latest_price['price']);
+            try {
+                current_price = parseFloat(latest_price['price']);
+            } catch (e) {
+                current_price = NaN
+            }
             if (isNaN(current_price)) {
                 $(target).html("<span class='text-muted'>" + $(target).text() + "</span>");
                 online = false
@@ -199,20 +204,21 @@ function update_servers() {
     interval_ms = 1000;
     const interval = setInterval(function () {
         // Get all servers
-        url = '/get_pickle?filename=mps_server_status&serialize=False';
+        url = '/node_action?full_node_data=true';
         server_data = ajax_getter(url);
         // Create table and parse data
-        if (server_data == 'file not found') {
+        if ((server_data == 'file not found') || (server_data.length == 0)) {
             content_id = '#server_table';
             $(content_id).html(`
-                <h6>
-                <i class="fa-solid fa-triangle-exclamation fa-lg text-warning"></i>&nbsp;&nbsp;No servers found. Check your connections.</h6>
+                <h6 class='text-center align-center text-warning'>
+                <i class="fa-solid fa-triangle-exclamation fa-lg text-warning"></i>&nbsp;&nbsp;Servers not found</h6>
                 `);
+            return
 
         }
         // Sort the server_data by name
+        server_data = sortObj(server_data, 'is_public');
         server_data = sortObj(server_data, 'name');
-
         create_table(server_data);
     }, interval_ms);
 }
@@ -247,7 +253,7 @@ function create_table(data) {
         // Source
         table += '<td class="text-start">' + row.name + '</td><td>';
         // Public or Private Node?
-        if (row.public == true) {
+        if (row.is_public == true) {
             datainfo = "Public servers are a privacy risk. They have access to your IP address that can be linked to searches and activity. They are good for checking overall status but don't use for specific address and transaction searches. Use with caution."
             table += createPill('public node', 'dark', datainfo)
         } else {
@@ -260,6 +266,9 @@ function create_table(data) {
         // Save the max tip height for later
         max_tip_height = row.max_tip_height;
         progress = (tip_height / max_tip_height) * 100;
+        if (isNaN(progress)) {
+            bg = 'danger'
+        }
         if (progress < 95) {
             bg = 'warning'
         }

@@ -6,9 +6,15 @@ home_path = Path.home()
 # make directory to store all private data at /home/warden_monitor
 # /root/warden_monitor/
 home_dir = os.path.join(home_path, 'warden_monitor')
+save_status_dir = os.path.join(home_dir, 'save_status')
 try:
     os.mkdir(home_dir)
 except Exception:
+    pass
+try:
+    os.mkdir(save_status_dir)
+except Exception as e:
+    # print(e)
     pass
 
 
