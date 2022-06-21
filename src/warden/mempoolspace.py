@@ -120,13 +120,13 @@ def get_max_height():
     for server in servers:
         end_point = 'api/blocks/tip/height'
         url = server[0]
-        highest_block = tor_request(url + end_point)
+        this_highest = tor_request(url + end_point)
         try:
-            highest_block = int(highest_block.text)
+            this_highest = int(this_highest.text)
         except Exception:
-            highest_block = 0
+            this_highest = 0
 
-        max_tip_height = max(max_tip_height, highest_block)
+        max_tip_height = max(max_tip_height, this_highest)
 
     # Save for later consumption
     pickle_it('save', 'max_tip_height.pkl', max_tip_height)
@@ -256,13 +256,7 @@ def check_api_health(url):
     if current_state['mps_api_reachable'] == True:
         current_state['last_check'] = datetime.utcnow()
 
-    # This endpoint will get the tip height with most proof of work
-    endpoint = 'api/blocks/tip/height'
-    try:
-        result = tor_request(url + endpoint)
-        current_state['max_tip_height'] = int(result.json())
-    except Exception:
-        current_state['max_tip_height'] = 0
+    current_state['max_tip_height'] = get_max_height()
 
     # Check tip height of this node
     current_state['tip_height'] = get_sync_height(url)
