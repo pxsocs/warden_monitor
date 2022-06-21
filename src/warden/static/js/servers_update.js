@@ -6,6 +6,7 @@ $(document).ready(function () {
     update_servers();
     update_clock();
     update_max_height();
+    update_block_details();
 
     $("#hidden-add-node").hide();
     $("#add_node").click(function () {
@@ -58,6 +59,51 @@ $(document).ready(function () {
         $("#wisdom_text").slideToggle("medium");
     });
 });
+
+
+
+function update_block_details() {
+    interval_block = 1000;
+    const interval = setInterval(function () {
+        target = '#block_info';
+        url = '/get_pickle?filename=last_block_info&serialize=False';
+        block_details = ajax_getter(url);
+        url = '/get_pickle?filename=most_updated&serialize=False'
+        most_updated_server = ajax_getter(url);
+
+        currentTimeStamp = new Date(isoDateString).getTime()
+        updated_time = new Date(updated_time).getTime()
+        loaded_time = block_details['timestamp']
+        loaded_time = loaded_time * 1000
+        console.log(updated_time)
+        console.log(loaded_time)
+        time_difference = timeDifference(currentTimeStamp, loaded_time).toLowerCase();
+
+        if (block_details == 'file not found') {
+            $(target).html("<span class='text-warning'>offline</span>");
+        } else {
+            color = 'muted';
+            icon = ''
+            if (time_difference.includes('now')) {
+                color = 'success',
+                    icon = '<i class="fa-solid fa-cubes"></i>'
+            } else if (time_difference.includes('seconds')) {
+                color = 'success',
+                    icon = '<i class="fa-solid fa-cubes"></i>'
+            } else if (time_difference.includes('minutes')) {
+                color = 'light'
+                icon = '<i class="fa-solid fa-cube"></i>'
+            } else if (time_difference.includes('hours')) {
+                color = 'warning'
+                icon = '<i class="fa-solid fa-clock"></i>'
+            }
+        }
+
+        $(target).html(`<span class='text-${color}'>${icon}&nbsp;block found ${time_difference}</span>`);
+
+    }, interval_block);
+}
+
 
 function update_clock() {
     interval_ms_clock = 5000;
@@ -245,7 +291,7 @@ function create_table(data) {
     $.each(data, function (key_x, row) {
         // Start Row
         if (row.online == true) {
-            table += '<tr>';
+            table += "<tr class='box'>";
         } else {
             table += '<tr class="offlineBackground">';
         }

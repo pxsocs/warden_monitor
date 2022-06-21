@@ -277,6 +277,66 @@ def check_api_health(url):
     return current_state
 
 
+# Which server has the latest updated data?
+# returns server data:
+# {
+#     "filename": "save_status/httpmempoolspace.pkl",
+#     "name": "mempool.space",
+#     "url": "http://mempool.space/",
+#     "online": true,
+#     "is_public": true,
+#     "last_check": "2022-06-21 15:29:39.714141",
+#     "max_tip_height": 741741,
+#     "tip_height": 741741,
+#     "synched": true,
+#     "mps_api_reachable": true,
+#     "onion": false,
+#     "localhost": false
+#   },
+def most_updated_server():
+    servers = server_names()
+    last_update = datetime.min
+    most_updated = None
+    for server in servers:
+        filename = "save_status/" + safe_filename(server[0]) + '.pkl'
+        server_info = pickle_it('load', filename)
+        last_check = server_info['last_check']
+        if last_check > last_update:
+            most_updated = server_info
+            last_check = last_update
+
+    pickle_it('save', 'most_updated.pkl', most_updated)
+    return most_updated
+
+
+# Get Block Header and return when was it found
+def get_last_block_info(url=None):
+    # if no url is provided, use the first on list
+    if url == None:
+        url = most_updated_server()['url']
+
+    max_tip = pickle_it('load', 'max_tip_height.pkl')
+    if max_tip == 'file not found':
+        max_tip = get_max_height()
+    # Check again - this cannot happen
+    if max_tip == 'file not found':
+        raise Exception("max_tip_height.pkl not found")
+
+    # Get Hash
+    end_point = 'api/block-height/' + str(max_tip)
+    hash = tor_request(url + end_point)
+    hash = hash.text
+
+    # Know get the latest data
+    end_point = 'api/block/' + hash
+    block_info = tor_request(url + end_point)
+    block_info = block_info.json()
+
+    pickle_it('save', 'last_block_info.pkl', block_info)
+
+    return (block_info)
+
+
 def get_node_full_data():
     node_list = server_names()
     full_list = []
