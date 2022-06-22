@@ -56,6 +56,8 @@ def server_names(action=None, url=None, name=None, public=True):
         name = 'Unknown' if name == None else name
         custom_names.append((url, name, public))
         pickle_it('save', 'mps_custom_names.pkl', custom_names)
+        # Now that it's included, request an update of this new node
+        check_api_health(url)
         return
 
     # Remove name from list

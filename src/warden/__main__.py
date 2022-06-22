@@ -9,6 +9,7 @@ import socket
 import emoji
 import sqlite3
 import requests
+from gevent.pywsgi import WSGIServer
 from logging.handlers import RotatingFileHandler
 from packaging import version
 from ansi.colour import fg
@@ -514,9 +515,8 @@ def main(debug=False, reloader=False):
 
         if host == '0.0.0.0':
             return (f"""
-        Or through your network at address:
-        {yellow('http://')}{yellow(get_local_ip())}{yellow(f':{port}/')}
-                """)
+      Or through your network at address:
+      {yellow('http://')}{yellow(get_local_ip())}{yellow(f':{port}/')}""")
 
     port = app.settings['SERVER'].getint('port')
 
@@ -562,9 +562,7 @@ def main(debug=False, reloader=False):
       {onion_string()}
     ----------------------------------------------------------------
                          CTRL + C to quit server
-    ----------------------------------------------------------------
-
-    """)
+    ----------------------------------------------------------------""")
 
     # Try to launch webbrowser and open the url
     # if "debug" not in sys.argv or "reloader" not in sys.argv:
@@ -574,11 +572,16 @@ def main(debug=False, reloader=False):
     #     except Exception:
     #         pass
 
-    app.run(debug=debug,
-            threaded=True,
-            host=app.settings['SERVER'].get('host'),
-            port=port,
-            use_reloader=reloader)
+    # Debug/Development
+    # app.run(debug=True,
+    #         threaded=True,
+    #         host=app.settings['SERVER'].get('host'),
+    #         port=port,
+    #         use_reloader=True)
+
+    # Production
+    http_server = WSGIServer((app.settings['SERVER'].get('host'), port), app)
+    http_server.serve_forever()
 
     if app.settings['SERVER'].getboolean('onion_server'):
         from tor import stop_hidden_services

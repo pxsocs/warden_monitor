@@ -1,6 +1,17 @@
 // Updates all servers and creates a table with results
 var online = true;
 
+const onion_icon = `
+        <span data-toggle="tooltip" data-placement="top" title="Tor Node accessible with onion address">
+        <i class="fa fa-tor-onion" aria-hidden="true"></i>
+        </span>`
+
+const local_icon = `
+        <span data-toggle="tooltip" data-placement="top" title="Node accessible only at your local network">
+        <i class="fa fa-home" aria-hidden="true"></i>
+        </span>`
+
+
 $(document).ready(function () {
     update_price();
     update_servers();
@@ -85,16 +96,16 @@ function update_block_details() {
             icon = ''
             if (time_difference.includes('now')) {
                 color = 'success',
-                    icon = '<i class="fa-solid fa-cubes"></i>'
+                    icon = '<i class="fa fa-bell-ringing-o" aria-hidden="true"></i>'
             } else if (time_difference.includes('seconds')) {
                 color = 'success',
-                    icon = '<i class="fa-solid fa-cubes"></i>'
+                    icon = '<i class="fa fa-check-square" aria-hidden="true"></i>'
             } else if (time_difference.includes('minutes')) {
                 color = 'light'
-                icon = '<i class="fa-solid fa-cube"></i>'
+                icon = '<i class="fa fa-check-square" aria-hidden="true"></i>'
             } else if (time_difference.includes('hours')) {
                 color = 'warning'
-                icon = '<i class="fa-solid fa-clock"></i>'
+                icon = '<i class="fa fa-hourglass-half" aria-hidden="true"></i>'
             }
         }
 
@@ -249,7 +260,7 @@ function update_price() {
             }
 
             online = true
-            $('#price_info').html("NgU Tech");
+            $('#price_info').html('<span style="color: lightgreen;"><i class="fa fa-btc" aria-hidden="true"></i>&nbsp;NgU Tech</span>');
             $(target).animate_number({
                 start_value: initial_price,
                 end_value: current_price,
@@ -333,6 +344,9 @@ function create_table(data) {
         </thead>
     `
 
+
+
+
     $.each(data, function (key_x, row) {
         // Start Row
         if (row.online == true) {
@@ -387,10 +401,10 @@ function create_table(data) {
 
         // Onion Address, Local Host or Public Address
         if (row.onion == true) {
-            table += createPill('Tor', 'success', 'This server is running on Tor')
+            table += onion_icon
         }
         if (row.localhost == true) {
-            table += createPill('local network', 'success', 'This server is running inside your local network. It will not be accessible from the internet.')
+            table += local_icon
         }
 
         // End Pills
@@ -407,8 +421,8 @@ function create_table(data) {
         table += '</td>'
 
         // Add link to URL
-        table += '<td class="text-end"><span class="badge bg-light">'
-        table += '<a href="' + row.url + '" target="_blank"> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+        table += '<td class="text-end"><span class="text-white">'
+        table += '<a href="' + row.url + '" target="_blank" class="text-white"> <i class="fa fa-external-link" aria-hidden="true"></i></a>'
         table += '</span></td>'
         // Close Row
         table += '</tr>';
