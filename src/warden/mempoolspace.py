@@ -129,7 +129,7 @@ def is_synched(url):
 
 
 # Returns the highest block height in all servers
-@MWT(timeout=15)
+@MWT(timeout=1)
 def get_max_height():
     max_tip_height = pickle_it('load', 'max_tip_height.pkl')
     if max_tip_height == 'file not found':
@@ -352,7 +352,11 @@ def most_updated_server():
 def get_last_block_info(url=None):
     # if no url is provided, use the first on list
     if url == None:
-        url = most_updated_server()['url']
+        logging.info(muted("checking last block - using default url "))
+        url = 'https://mempool.space/'
+        logging.info(url)
+
+    logging.info(muted("Checking last block info for: " + url))
 
     max_tip = pickle_it('load', 'max_tip_height.pkl')
     if max_tip == 'file not found':
@@ -367,6 +371,8 @@ def get_last_block_info(url=None):
     hash = hash.text
 
     if hash == 'Block height out of range':
+        logging.info(
+            error("Block height out of range -- could not get latest time"))
         return None
 
     # Know get the latest data
