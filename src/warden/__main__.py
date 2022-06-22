@@ -43,12 +43,13 @@ def create_app():
                         format=formatter,
                         datefmt='%m/%d/%Y %I:%M:%S %p')
     logging.getLogger('apscheduler').setLevel(logging.CRITICAL)
-    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
     logging.info("Starting main program...")
 
     # Launch app
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.logger = logging.getLogger()
 
     return app
 

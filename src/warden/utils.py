@@ -4,6 +4,7 @@ import os
 import json
 import pickle
 import glob
+import time
 
 from config import Config
 
@@ -63,6 +64,17 @@ def pickle_it(action='load', filename=None, data=None):
     if action == 'list':
         files = os.listdir(filename)
         ret_list = [x for x in files if x.endswith('.pkl')]
+        try:
+            # Try to get save_status
+            filename = filename + '/save_status'
+            files = os.listdir(filename)
+            ret_list_2 = [
+                'save_status/' + x for x in files if x.endswith('.pkl')
+            ]
+            ret_list = ret_list + ret_list_2
+        except Exception:
+            pass
+
         return (ret_list)
 
     if action == 'delete':
@@ -189,3 +201,27 @@ def safe_filename(s):
     return ("".join([
         c for c in s if c.isalpha() or c.isdigit() or c == '_' or c == '-'
     ]).rstrip())
+
+
+def join_all(threads, timeout):
+    """
+    Args:
+        threads: a list of thread objects to join
+        timeout: the maximum time to wait for the threads to finish
+    Raises:
+        RuntimeError: is not all the threads have finished by the timeout
+    """
+    start = cur_time = time.time()
+    while cur_time <= (start + timeout):
+        for thread in threads:
+            if thread.is_alive():
+                thread.join(timeout=0)
+        if all(not t.is_alive() for t in threads):
+            break
+        time.sleep(0.1)
+        cur_time = time.time()
+    else:
+        still_running = [t for t in threads if t.is_alive()]
+        num = len(still_running)
+        names = [t.name for t in still_running]
+        raise RuntimeError('Timeout on {0} threads: {1}'.format(num, names))

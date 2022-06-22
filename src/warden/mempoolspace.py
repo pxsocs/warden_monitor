@@ -3,12 +3,18 @@ from fileinput import filename
 from embit import bip32, script
 from embit.networks import NETWORKS
 import threading
+import logging
 import pandas as pd
 from utils import pickle_it, safe_filename
 from connections import tor_request, url_reachable
+from ansi_management import (warning, success, error, info, clear_screen,
+                             muted, yellow, blue)
+from utils import join_all
+from decorators import MWT
 
 
 # Creates a list of URLs and names for the public and private addresses
+@MWT(timeout=1)
 def server_names(action=None, url=None, name=None, public=True):
     # Sample list_all output:
     # [
@@ -80,20 +86,29 @@ def server_names(action=None, url=None, name=None, public=True):
 
 # Creates background thread to check all servers
 def check_all_servers():
+    logging.info(muted("Checking all servers"))
     mp_addresses = server_names()
     urls = [i[0] for i in mp_addresses]
 
     threads = []
+
     for url in urls:
         threads.append(threading.Thread(target=check_api_health, args=[url]))
 
+    logging.info(muted("All servers threads joined. Kicking off."))
+
     for thread in threads:
         thread.start()
-    for thread in threads:
-        thread.join()
+    # Join all threads and timeout after 60 seconds
+    join_all(threads, 90)
+
+    logging.info(success("All servers threads concluded"))
 
 
+@MWT(timeout=15)
 def is_synched(url):
+    logging.info(muted("Checking if " + url + " is synched"))
+
     endpoint = 'api/block-height/'
     max_tip = pickle_it('load', 'max_tip_height.pkl')
     if max_tip == 'file not found':
@@ -101,16 +116,20 @@ def is_synched(url):
     result = tor_request(url + endpoint + str(max_tip))
     try:
         r = result.text
-    except Exception:
+    except Exception as e:
+        logging.info(warning(url + " synch check failed. Error: " + str(e)))
         return False
     bad_response = 'Block height out of range'
     if r == bad_response:
+        logging.info(warning(url + " is not synched"))
         return False
     else:
+        logging.info(success(url + " is synched"))
         return True
 
 
 # Returns the highest block height in all servers
+@MWT(timeout=15)
 def get_max_height():
     max_tip_height = pickle_it('load', 'max_tip_height.pkl')
     if max_tip_height == 'file not found':
@@ -138,7 +157,9 @@ def get_max_height():
 # Mempoolspace API does not return the latest block height
 # that is synched on the server.
 # So, as an alternative, we can iterate and check where we are
+@MWT(timeout=120)
 def get_sync_height(url):
+    logging.info(muted("Checking tip height for " + url))
     message = 'Block height out of range'
     max_tip = pickle_it('load', 'max_tip_height.pkl')
     if max_tip == 'file not found':
@@ -151,6 +172,8 @@ def get_sync_height(url):
     # if not, fully synched
     check = check_block(url, max_tip)
     if check != message:
+        logging.info(muted("No need to iterate " + url))
+        logging.info(success(f"{url} at {max_tip}"))
         return max_tip
     else:
         # Could not find the tip. Let's see if halfway through the chain
@@ -161,6 +184,7 @@ def get_sync_height(url):
         found = False
         while found == False:
             current_check = int((end + start) / 2)
+            logging.info(muted(f"{url} checking at {current_check}"))
             check = check_block(url, current_check)
             # Two outcomes - either not found, means we need to go lower, or found
             if check == message:
@@ -173,9 +197,12 @@ def get_sync_height(url):
                 # The next one was also found so we need to look higher
                 else:
                     start = current_check + 1
+
+        logging.info(success(f"{url} at {current_check}"))
         return current_check
 
 
+@MWT(timeout=600)
 def check_block(url, block):
     end_point = 'api/block-height/'
     try:
@@ -199,6 +226,7 @@ def is_url_mp_api(url):
         return False
 
 
+@MWT(timeout=2)
 def check_api_health(url):
     # . Reachable
     # . ping time
@@ -221,10 +249,14 @@ def check_api_health(url):
     # Get name info for this server
     server_data = server_names('get_info', url)
 
+    logging.info(muted("Checking server: " + server_data[1]))
+
     # Load previous status
     previous_state = pickle_it('load', filename)
 
     if previous_state == 'file not found':
+        logging.info(error(server_data[1] +
+                           ' has not been previously checked'))
         current_state = {
             'filename': filename,
             'name': 'loading...',
@@ -276,6 +308,10 @@ def check_api_health(url):
     # Save pickle
     pickle_it('save', filename, current_state)
 
+    logging.info(
+        success(server_data[1] + ' checked. Last check: ' +
+                str(current_state['last_check'])))
+
     return current_state
 
 
@@ -312,6 +348,7 @@ def most_updated_server():
 
 
 # Get Block Header and return when was it found
+@MWT(timeout=10)
 def get_last_block_info(url=None):
     # if no url is provided, use the first on list
     if url == None:
@@ -329,12 +366,17 @@ def get_last_block_info(url=None):
     hash = tor_request(url + end_point)
     hash = hash.text
 
+    if hash == 'Block height out of range':
+        return None
+
     # Know get the latest data
     end_point = 'api/block/' + hash
     block_info = tor_request(url + end_point)
-    block_info = block_info.json()
-
-    pickle_it('save', 'last_block_info.pkl', block_info)
+    try:
+        block_info = block_info.json()
+        pickle_it('save', 'last_block_info.pkl', block_info)
+    except Exception:
+        return None
 
     return (block_info)
 

@@ -15,8 +15,8 @@ const online_icon = `<span data-toggle="tooltip" data-placement="top" title="nod
                         <i class="fa fa-signal text-success" aria-hidden="true"></i>
                     </span>`
 
-const offline_icon = `<span data-toggle="tooltip" data-placement="top" title="node is online">
-                        <i class="fa fa-chain-broken text-danger" aria-hidden="true"></i>
+const offline_icon = `<span data-toggle="tooltip" data-placement="top" title="node is offline and cannot be reached">
+                        <i class="fa fa-signal text-danger" aria-hidden="true"></i>
                     </span>`
 
 const private_icon = `<span data-toggle="tooltip" data-placement="top" title="this is a private node - the prefered method to check transactions and the bitcoin blockchain">
@@ -366,11 +366,8 @@ function create_table(data) {
 
     $.each(data, function (key_x, row) {
         // Start Row
-        if (row.online == true) {
-            table += "<tr class='box'>";
-        } else {
-            table += '<tr class="offlineBackground">';
-        }
+        table += "<tr class='box'>";
+
 
         // Name
         table += '<td class="text-start">' + row.name + '</td>';
