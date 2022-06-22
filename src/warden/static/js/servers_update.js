@@ -193,6 +193,14 @@ function update_stats() {
         target = '#stats';
         url = '/get_pickle?filename=nodes_status&serialize=False';
         stats = ajax_getter(url);
+        if (typeof stats === 'string' || stats instanceof String) {
+            stats = {
+                'total_nodes': 'offline',
+                'online': 'offline',
+                'at_tip': 'offline',
+                'onion': 'offline',
+            }
+        }
         if (stats == 'file not found') {
             return
         } else {
@@ -394,7 +402,6 @@ function create_table(data) {
             bg = 'success'
         }
         progress_bar = createProgress(formatNumber(progress, 0, '', '%'), progress, bg, 'Block height');
-
         table += `<td class="text-center small-text"> ${formatNumber(tip_height, 0)} / ${formatNumber(max_tip_height, 0)} ${progress_bar} </td>`;
 
         // Updated time
