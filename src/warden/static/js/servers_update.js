@@ -11,6 +11,24 @@ const local_icon = `
         <i class="fa fa-home" aria-hidden="true"></i>
         </span>`
 
+const online_icon = `<span data-toggle="tooltip" data-placement="top" title="node is online">
+                        <i class="fa fa-signal text-success" aria-hidden="true"></i>
+                    </span>`
+
+const offline_icon = `<span data-toggle="tooltip" data-placement="top" title="node is online">
+                        <i class="fa fa-chain-broken text-danger" aria-hidden="true"></i>
+                    </span>`
+
+const private_icon = `<span data-toggle="tooltip" data-placement="top" title="this is a private node - the prefered method to check transactions and the bitcoin blockchain">
+    <i class="fa fa-user-secret text-success" aria-hidden="true"></i>
+    </span>`
+
+const public_icon = `<span data-toggle="tooltip" data-placement="top" title="this is a public node - exercise caution when requesting private information like txs and bitcoin addresses - they may be linked to your IP address">
+    <i class="fa fa-users text-muted" aria-hidden="true"></i>
+    </span>`
+
+
+
 
 $(document).ready(function () {
     update_price();
@@ -50,7 +68,7 @@ $(document).ready(function () {
                 if (data_back == 'success') {
                     send_message(`Node ${node_name} added successfully. Please allow a few seconds before it shows in the list.`, 'success');
                 } else {
-                    send_message(`Node ${node_name} failed to be included.<br> Error: ${data_back}`, 'warning');
+                    send_message(`Node ${node_name} failed to be included.<br> Error: ${data_back}`, 'muted');
                 }
                 $("#hidden-add-node").slideToggle("medium");
             },
@@ -90,7 +108,7 @@ function update_block_details() {
         time_difference = timeDifference(currentTimeStamp, loaded_time).toLowerCase();
 
         if (block_details == 'file not found') {
-            $(target).html("<span class='text-warning'>offline</span>");
+            $(target).html("<span class='text-muted'>offline</span>");
         } else {
             color = 'muted';
             icon = ''
@@ -312,8 +330,8 @@ function update_servers() {
         if ((server_data == 'file not found') || (server_data.length == 0)) {
             content_id = '#server_table';
             $(content_id).html(`
-                <h6 class='text-center align-center text-warning'>
-                <i class="fa-solid fa-triangle-exclamation fa-lg text-warning"></i>&nbsp;&nbsp;Servers not found</h6>
+                <h6 class='text-center align-center text-muted'>
+                <i class="fa-solid fa-triangle-exclamation fa-lg text-muted"></i>&nbsp;&nbsp;Servers not found</h6>
                 `);
             return
 
@@ -334,7 +352,6 @@ function create_table(data) {
         <thead>
             <tr class='small-text'>
                 <td>Source</td>
-                <td></td>
                 <td class="text-center">Latest Block</td>
                 <td class="text-end">Updated</td>
                 <td class="text-center"></td>
@@ -355,16 +372,8 @@ function create_table(data) {
             table += '<tr class="offlineBackground">';
         }
 
-        // Source
-        table += '<td class="text-start">' + row.name + '</td><td>';
-        // Public or Private Node?
-        if (row.is_public == true) {
-            datainfo = "Public servers are a privacy risk. They have access to your IP address that can be linked to searches and activity. They are good for checking overall status but don't use for specific address and transaction searches. Use with caution."
-            table += createPill('public node', 'dark', datainfo)
-        } else {
-            table += createPill('private node', 'dark', 'Running your own node provides a more private experience.')
-        }
-        table += '</td>';
+        // Name
+        table += '<td class="text-start">' + row.name + '</td>';
 
         // Latest Block
         tip_height = row.tip_height
@@ -375,7 +384,7 @@ function create_table(data) {
             bg = 'danger'
         }
         if (progress < 95) {
-            bg = 'warning'
+            bg = 'secondary'
         }
         if (progress < 80) {
             bg = 'danger'
@@ -407,6 +416,16 @@ function create_table(data) {
             table += local_icon
         }
 
+
+        // Public or Private Node?
+        if (row.is_public == true) {
+            table += public_icon
+        } else {
+            table += private_icon
+        }
+        table += '</td>';
+
+
         // End Pills
         table += '</td>'
 
@@ -414,16 +433,16 @@ function create_table(data) {
         // Check if online
         table += '<td class="text-center">'
         if (row.online == true) {
-            table += createPill('ONLINE', 'success', 'server is online')
+            table += online_icon
         } else {
-            table += createPill('OFFLINE', 'danger', 'server is offline')
+            table += offline_icon
         }
         table += '</td>'
 
         // Add link to URL
-        table += '<td class="text-end"><span class="text-white">'
+        table += '<td class="text-end">'
         table += '<a href="' + row.url + '" target="_blank" class="text-white"> <i class="fa fa-external-link" aria-hidden="true"></i></a>'
-        table += '</span></td>'
+        table += '</td>'
         // Close Row
         table += '</tr>';
     });
