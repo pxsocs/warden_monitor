@@ -35,6 +35,6 @@ git pull origin master
 
 ## Screenshot
 
-<img width="796" alt="image" src="https://user-images.githubusercontent.com/40473443/174898333-0b7dd571-fd5d-412f-a02d-fe013eb27b54.png">
+<img width="821" alt="image" src="https://user-images.githubusercontent.com/40473443/175116194-3d23d75c-2fed-4607-9028-2d2d8a2272b7.png">
 
 
