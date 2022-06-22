@@ -4,6 +4,8 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:100");
 
 
+
+
 body {
   color: #c1c6cb;
   background-color: #15202e;
@@ -284,11 +286,19 @@ hr {
         text-transform: uppercase;
     }
 
+.text-success {
+  color: rgb(212, 255, 177) !important;
+}
+
+.bg-success {
+  background-color: rgb(39, 86, 0) !important;
+}
+
 .dashboard-numbers {
         align-items: center;
         font-weight: lighter;
         font-size: 130%;
-        color: rgb(237, 255, 222);
+        color: rgb(212, 255, 177);
         width:100%;
         }
 

@@ -573,15 +573,11 @@ def main(debug=False, reloader=False):
     #         pass
 
     # Debug/Development
-    # app.run(debug=True,
-    #         threaded=True,
-    #         host=app.settings['SERVER'].get('host'),
-    #         port=port,
-    #         use_reloader=True)
-
-    # Production
-    http_server = WSGIServer((app.settings['SERVER'].get('host'), port), app)
-    http_server.serve_forever()
+    app.run(debug=True,
+            threaded=True,
+            host=app.settings['SERVER'].get('host'),
+            port=port,
+            use_reloader=False)
 
     if app.settings['SERVER'].getboolean('onion_server'):
         from tor import stop_hidden_services
