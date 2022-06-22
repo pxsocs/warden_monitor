@@ -408,9 +408,13 @@ function create_table(data) {
         isoDateString = new Date().toISOString();
         currentTimeStamp = new Date(isoDateString).getTime()
         // Mark current time as UTC with a Z
-        updated_time = new Date(row.last_check + 'Z').toISOString()
-        updated_time = new Date(updated_time).getTime()
-        table += '<td class="text-end small-text">' + timeDifference(currentTimeStamp, updated_time) + '</td>';
+        try {
+            updated_time = new Date(row.last_check + 'Z').toISOString()
+            updated_time = new Date(updated_time).getTime()
+            table += '<td class="text-end small-text">' + timeDifference(currentTimeStamp, updated_time) + '</td>';
+        } catch {
+            table += '<td class="text-end small-text text-warning"> error checking. retrying...</td>';
+        }
 
         // Info & Pills
         table += '<td class="text-center">'
