@@ -294,7 +294,10 @@ function update_price() {
 }
 
 function createProgress(text, progress, bg = 'info', datainfo = undefined) {
-    progress_txt = `<div class="progress">
+    if (isNaN(progress)) {
+        return '&nbsp;'
+    } else {
+        progress_txt = `<div class="progress">
                         <div class="progress-bar bg-${bg}"
                             data-toggle="tooltip"
                             data-placement="top"
@@ -304,7 +307,8 @@ function createProgress(text, progress, bg = 'info', datainfo = undefined) {
                             ${text}
                         </div>
                     </div>`
-    return (progress_txt);
+        return (progress_txt);
+    }
 }
 
 
@@ -331,7 +335,7 @@ function update_servers() {
             content_id = '#server_table';
             $(content_id).html(`
                 <h6 class='text-center align-center text-muted'>
-                <i class="fa-solid fa-triangle-exclamation fa-lg text-muted"></i>&nbsp;&nbsp;Servers not found</h6>
+                <i class="fa-solid fa-triangle-exclamation fa-lg text-muted"></i>&nbsp;&nbsp;Servers not found... please wait...</h6>
                 `);
             return
 

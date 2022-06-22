@@ -95,19 +95,18 @@ def check_all_servers():
     for url in urls:
         threads.append(threading.Thread(target=check_api_health, args=[url]))
 
-    logging.info(muted("All servers threads joined. Kicking off."))
-
     for thread in threads:
         thread.start()
-    # Join all threads and timeout after 60 seconds
-    join_all(threads, 90)
+    # Join all threads
+    for thread in threads:
+        thread.join()
 
     logging.info(success("All servers threads concluded"))
 
 
 # This process can be time consuming
 # so we need to check in parallel with threads
-@MWT(timeout=30)
+@MWT(timeout=10)
 def check_all_tip_heights():
     logging.info(muted("Checking all tip heights"))
     mp_addresses = server_names()
@@ -117,12 +116,11 @@ def check_all_tip_heights():
     for url in urls:
         threads.append(threading.Thread(target=get_sync_height, args=[url]))
 
-    logging.info(muted("All servers get tip threads joined. Kicking off."))
-
     for thread in threads:
         thread.start()
-    # Join all threads and timeout after 60 seconds
-    join_all(threads, 90)
+    # Join all threads
+    for thread in threads:
+        thread.join()
 
     logging.info(success("All servers get_tip threads concluded"))
 
@@ -151,7 +149,7 @@ def is_synched(url):
 
 
 # Returns the highest block height in all servers
-@MWT(timeout=1)
+@MWT(timeout=30)
 def get_max_height():
     max_tip_height = pickle_it('load', 'max_tip_height.pkl')
     if max_tip_height == 'file not found':
@@ -179,10 +177,10 @@ def get_max_height():
 # Mempoolspace API does not return the latest block height
 # that is synched on the server.
 # So, as an alternative, we can iterate and check where we are
-@MWT(timeout=120)
 def get_sync_height(url):
     logging.info(muted("Checking tip height for " + url))
     message = 'Block height out of range'
+    filename = "save_status/" + safe_filename(url) + '.pkl'
     max_tip = pickle_it('load', 'max_tip_height.pkl')
     if max_tip == 'file not found':
         max_tip = get_max_height()
@@ -196,12 +194,19 @@ def get_sync_height(url):
     if check != message:
         logging.info(muted("No need to iterate " + url))
         logging.info(success(f"{url} at {max_tip}"))
+        previous_state = pickle_it('load', filename)
+        if previous_state != 'file not found':
+            previous_state['tip_height'] = max_tip
+        else:
+            previous_state = {'tip_height': max_tip}
+        pickle_it('save', filename, previous_state)
         return max_tip
     else:
         # Could not find the tip. Let's see if halfway through the chain
         # it finds the data, then we can iterate from there
         # This process is time consuming. Needs to be optimized later.
         start = 0
+
         end = max_tip
         found = False
         while found == False:
@@ -221,7 +226,6 @@ def get_sync_height(url):
                     start = current_check + 1
 
         # Update the saved pkl for this server
-        filename = "save_status/" + safe_filename(url) + '.pkl'
         if url is None:
             return None
 
@@ -324,9 +328,6 @@ def check_api_health(url):
 
     current_state['max_tip_height'] = get_max_height()
 
-    # Check tip height of this node
-    # current_state['tip_height'] = get_sync_height(url)
-
     # Check if synched
     current_state['synched'] = is_synched(url)
 
@@ -380,7 +381,7 @@ def most_updated_server():
 
 
 # Get Block Header and return when was it found
-@MWT(timeout=10)
+@MWT(timeout=30)
 def get_last_block_info(url=None):
     # if no url is provided, use the first on list
     if url == None:
