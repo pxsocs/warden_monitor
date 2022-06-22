@@ -22,7 +22,12 @@
     />
 
     <!-- Fork Awesome - icons and fonts -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css" integrity="sha256-XoaMnoYC5TH6/+ihMEnospgm0J1PM/nioxbOUdnM8HY=" crossorigin="anonymous">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css"
+      integrity="sha256-XoaMnoYC5TH6/+ihMEnospgm0J1PM/nioxbOUdnM8HY="
+      crossorigin="anonymous"
+    />
 
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
@@ -37,28 +42,31 @@
       href="{{url_for('static', filename='css/warden.css')}}"
     />
 
-  <!-- Bootstrap core JS-->
+    <!-- Bootstrap core JS-->
     <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-    crossorigin="anonymous"></script>
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
 
     <!-- Helper Functions -->
     <script src="{{url_for('static', filename='js/utils.js')}}"></script>
-
   </head>
 
-<body id="page-top">
+  <body id="page-top">
     <!-- Navigation-->
 
-
-   <nav class="navbar navbar-dark bg-steel navbar-expand-lg navbar-font justify-content-end">
-
-        <a class="dashboard-header navbar-brand" href="#page-top">WARden Monitor</a>
-        <button
+    <nav
+      class="navbar navbar-dark bg-steel navbar-expand-lg navbar-font justify-content-end"
+    >
+      <a class="dashboard-header navbar-brand" href="#page-top">Node Monitor</a>
+      <!-- <button
           class="navbar-toggler navbar-toggler-right"
           type="button"
           data-bs-toggle="collapse"
@@ -79,53 +87,54 @@
             </li>
           </ul>
         </div>
-      </div>
+      </div> -->
     </nav>
 
-
     <!-- Main Content -->
-<div class="container-fluid">
-
-    <div class="row" id='message_alert_area' hide>
+    <div class="container-fluid">
+      <div class="row" id="message_alert_area" hide>
         {% with messages = get_flashed_messages(with_categories=true) %} {% if
         messages %} {% for category, message in messages %}
         <div class="col">
-            <div id="messagealert" class="alert alert-{{ category }}">
-              {{message}}
-            </div>
+          <div id="messagealert" class="alert alert-{{ category }}">
+            {{message}}
+          </div>
         </div>
         {% endfor %} {% endif %} {% endwith %}
-    </div>
+      </div>
 
-    <div class="row" id='main_body'>
-      <div class="col">{% block content %} {% endblock %}</div>
+      <div class="row" id="main_body">
+        <div class="col">{% block content %} {% endblock %}</div>
+      </div>
     </div>
-
-</div>
 
     <!-- Footer -->
-        <footer class="site-footer bg-steel small fixed-bottom">
+    <footer class="site-footer bg-steel small fixed-bottom">
+      <div class="row text-white">
+        <div class="col-sm-6 text-start float-left">
+          <i class="fa fa-github" aria-hidden="true"></i>
+          &nbsp;&nbsp;<a
+            class="text-white"
+            style="text-decoration: none"
+            href="https://github.com/pxsocs/warden/"
+          >
+            Open Source Code</a
+          >
+        </div>
 
-            <div class="row text-white">
-                <div class="col-sm-6 text-start float-left">
-                    <i class="fa fa-github" aria-hidden="true"></i>
-                    &nbsp;&nbsp;<a class='text-white' style="text-decoration : none"
-                        href='https://github.com/pxsocs/warden/'>
-                        Open Source Code</a>
-                </div>
-
-
-                <div class="col-sm-6 text-end float-end">Developed by
-                    <a class='text-white' style="text-decoration : none" href="https://twitter.com/alphaazeta">
-                        <span class="text-white">@AlphaaZeta&nbsp;</span></a>
-                </div>
-            </div>
-
-
-        </footer>
-
+        <div class="col-sm-6 text-end float-end">
+          Developed by
+          <a
+            class="text-white"
+            style="text-decoration: none"
+            href="https://twitter.com/alphaazeta"
+          >
+            <span class="text-white">@AlphaaZeta&nbsp;</span></a
+          >
+        </div>
+      </div>
+    </footer>
   </body>
-
 
   {%block modals%} {%endblock%}
 </html>

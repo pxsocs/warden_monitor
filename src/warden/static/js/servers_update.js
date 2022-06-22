@@ -423,6 +423,7 @@ function create_table(data) {
             table += '<td class="text-end small-text">' + timeDifference(currentTimeStamp, updated_time) + '</td>';
         } catch {
             table += '<td class="text-end small-text text-warning"> error checking. retrying...</td>';
+            console.log(currentTimeStamp)
         }
 
         // Info & Pills
