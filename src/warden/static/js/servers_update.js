@@ -2,28 +2,28 @@
 var online = true;
 
 const onion_icon = `
-        <span data-toggle="tooltip" data-placement="top" title="Tor Node accessible with onion address">
+        <span data-bs-toggle="tooltip" data-bs-placement="top" title="Tor Node accessible with onion address">
         <i class="fa fa-tor-onion" aria-hidden="true"></i>
         </span>`
 
 const local_icon = `
-        <span data-toggle="tooltip" data-placement="top" title="Node accessible only at your local network">
+        <span data-bs-toggle="tooltip" data-bs-placement="top" title="Node accessible only at your local network">
         <i class="fa fa-home" aria-hidden="true"></i>
         </span>`
 
-const online_icon = `<span data-toggle="tooltip" data-placement="top" title="node is online">
+const online_icon = `<span data-bs-toggle="tooltip" data-bs-placement="top" title="node is online">
                         <i class="fa fa-signal text-success" aria-hidden="true"></i>
                     </span>`
 
-const offline_icon = `<span data-toggle="tooltip" data-placement="top" title="node is offline and cannot be reached">
+const offline_icon = `<span data-bs-toggle="tooltip" data-bs-placement="top" title="node is offline and cannot be reached">
                         <i class="fa fa-signal text-danger" aria-hidden="true"></i>
                     </span>`
 
-const private_icon = `<span data-toggle="tooltip" data-placement="top" title="this is a private node - the prefered method to check transactions and the bitcoin blockchain">
+const private_icon = `<span data-bs-toggle="tooltip" data-bs-placement="top" title="this is a private node - the prefered method to check transactions and the bitcoin blockchain">
     <i class="fa fa-user-secret text-success" aria-hidden="true"></i>
     </span>`
 
-const public_icon = `<span data-toggle="tooltip" data-placement="top" title="this is a public node - exercise caution when requesting private information like txs and bitcoin addresses - they may be linked to your IP address">
+const public_icon = `<span data-bs-toggle="tooltip" data-bs-placement="top" title="this is a public node - exercise caution when requesting private information like txs and bitcoin addresses - they may be linked to your IP address">
     <i class="fa fa-users text-muted" aria-hidden="true"></i>
     </span>`
 
@@ -31,6 +31,8 @@ const public_icon = `<span data-toggle="tooltip" data-placement="top" title="thi
 
 
 $(document).ready(function () {
+
+    initialize_tooltips();
     update_price();
     update_servers();
     update_clock();
@@ -102,10 +104,15 @@ function update_block_details() {
         most_updated_server = ajax_getter(url);
 
         currentTimeStamp = new Date(isoDateString).getTime()
-        updated_time = new Date(updated_time).getTime()
-        loaded_time = block_details['timestamp']
-        loaded_time = loaded_time * 1000
-        time_difference = timeDifference(currentTimeStamp, loaded_time).toLowerCase();
+        try {
+            updated_time = new Date(updated_time).getTime()
+            loaded_time = block_details['timestamp']
+            loaded_time = loaded_time * 1000
+            time_difference = timeDifference(currentTimeStamp, loaded_time).toLowerCase();
+        } catch {
+            $(target).html("<span class='text-muted'>offline</span>");
+            return
+        }
 
         if (block_details == 'file not found') {
             $(target).html("<span class='text-muted'>offline</span>");
@@ -307,8 +314,8 @@ function createProgress(text, progress, bg = 'info', datainfo = undefined) {
     } else {
         progress_txt = `<div class="progress">
                         <div class="progress-bar bg-${bg}"
-                            data-toggle="tooltip"
-                            data-placement="top"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
                             title="${datainfo}"
                             role="progressbar"
                             style="width: ${progress}%; ">
@@ -324,7 +331,7 @@ function createPill(text, bg = 'info', datainfo = undefined) {
     // pill start
     pill = '<span class="badge  bg-' + bg + ' '
     if (datainfo != undefined) {
-        pill += ' datainfo" data-toggle="tooltip" data-placement="top" title="' + datainfo + '"';
+        pill += ' datainfo" data-bs-toggle="tooltip" data-bs-placement="top" title="' + datainfo + '"';
     }
     pill += '>' + text + '</span>&nbsp;';
     return (pill);
@@ -333,7 +340,7 @@ function createPill(text, bg = 'info', datainfo = undefined) {
 
 function update_servers() {
     // Updated every second
-    interval_ms = 1000;
+    interval_ms = 5000;
     const interval = setInterval(function () {
         // Get all servers
         url = '/node_action?full_node_data=true';
@@ -352,6 +359,8 @@ function update_servers() {
         server_data = sortObj(server_data, 'is_public');
         server_data = sortObj(server_data, 'name');
         create_table(server_data);
+        initialize_tooltips();
+
     }, interval_ms);
 }
 
@@ -463,4 +472,5 @@ function create_table(data) {
     // Close Table
     table += '</table>';
     $(content_id).html(table);
+
 }

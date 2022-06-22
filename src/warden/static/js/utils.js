@@ -637,3 +637,13 @@ function splitString(n, str) {
     if (subStr.length) { result.push(subStr) }
     return result
 }
+
+
+function initialize_tooltips() {
+    $(".tooltip").tooltip("hide");
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+}
