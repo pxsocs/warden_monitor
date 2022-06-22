@@ -105,7 +105,6 @@ function update_block_details() {
         updated_time = new Date(updated_time).getTime()
         loaded_time = block_details['timestamp']
         loaded_time = loaded_time * 1000
-        console.log(block_details['timestamp'])
         time_difference = timeDifference(currentTimeStamp, loaded_time).toLowerCase();
 
         if (block_details == 'file not found') {

@@ -105,6 +105,28 @@ def check_all_servers():
     logging.info(success("All servers threads concluded"))
 
 
+# This process can be time consuming
+# so we need to check in parallel with threads
+@MWT(timeout=30)
+def check_all_tip_heights():
+    logging.info(muted("Checking all tip heights"))
+    mp_addresses = server_names()
+    urls = [i[0] for i in mp_addresses]
+    threads = []
+
+    for url in urls:
+        threads.append(threading.Thread(target=get_sync_height, args=[url]))
+
+    logging.info(muted("All servers get tip threads joined. Kicking off."))
+
+    for thread in threads:
+        thread.start()
+    # Join all threads and timeout after 60 seconds
+    join_all(threads, 90)
+
+    logging.info(success("All servers get_tip threads concluded"))
+
+
 @MWT(timeout=15)
 def is_synched(url):
     logging.info(muted("Checking if " + url + " is synched"))
@@ -197,6 +219,16 @@ def get_sync_height(url):
                 # The next one was also found so we need to look higher
                 else:
                     start = current_check + 1
+
+        # Update the saved pkl for this server
+        filename = "save_status/" + safe_filename(url) + '.pkl'
+        if url is None:
+            return None
+
+        # Load previous status, update and save
+        previous_state = pickle_it('load', filename)
+        previous_state['tip_height'] = current_check
+        pickle_it('save', filename, previous_state)
 
         logging.info(success(f"{url} at {current_check}"))
         return current_check
@@ -293,7 +325,7 @@ def check_api_health(url):
     current_state['max_tip_height'] = get_max_height()
 
     # Check tip height of this node
-    current_state['tip_height'] = get_sync_height(url)
+    # current_state['tip_height'] = get_sync_height(url)
 
     # Check if synched
     current_state['synched'] = is_synched(url)
