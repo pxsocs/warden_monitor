@@ -421,8 +421,11 @@ function create_table(data) {
         // Do not update this html if currently being edited
 
         // Name
-        table += '<td class="text-start datainfo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Click on name to edit"><span class="edit_name">' + row.name + '</span></td>';
-
+        if (row.name == undefined) {
+            table += '<td class="text-start text-warning datainfo">Loading Node... Please wait.</span></td>';
+        } else {
+            table += '<td class="text-start datainfo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Click on name to edit"><span class="edit_name">' + row.name + '</span></td>';
+        }
         // Latest Block
         tip_height = row.tip_height
         // Save the max tip height for later

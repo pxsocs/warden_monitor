@@ -192,12 +192,14 @@ def get_sync_height(url):
     check = check_block(url, max_tip)
     if check != message:
         logging.info(muted("No need to iterate " + url))
-        logging.info(success(f"{url} at {max_tip}"))
         if previous_state != 'file not found':
             previous_state['tip_height'] = max_tip
+            node_name = previous_state['name']
         else:
             previous_state = {'tip_height': max_tip}
+            node_name = f'Unknown node at {url}'
         pickle_it('save', filename, previous_state)
+        logging.info(success(f"{node_name} at {max_tip}"))
         return max_tip
     else:
         # Could not find the tip. Let's see if halfway through the chain
@@ -212,18 +214,25 @@ def get_sync_height(url):
         # this may be quicker
         steps_ahead = 3
         if previous_state != 'file not found':
+            node_name = previous_state['name']
             last_tip = previous_state['tip_height']
-            for i in range(steps_ahead):
-                current_check = last_tip + i + 1
-                logging.info(
-                    muted(f"Checking [steps ahead] {url} at {current_check}"))
-                check = check_block(url, current_check)
-                if check != message:
-                    logging.info(success(f"{url} synched at {current_check}"))
-                    max_tip = current_check
-                    previous_state['tip_height'] = max_tip
-                    pickle_it("save", filename, previous_state)
-                    return max_tip
+            if isinstance(last_tip, int):
+                for i in range(steps_ahead):
+                    current_check = last_tip + i + 1
+                    # No need to check after top tip
+                    if current_check > max_tip:
+                        break
+                    logging.info(
+                        muted(
+                            f"Checking [steps ahead] {node_name} at {current_check}"
+                        ))
+                    check = check_block(url, current_check)
+                    if check != message:
+                        logging.info(
+                            success(f"{node_name} synched at {current_check}"))
+                        previous_state['tip_height'] = current_check
+                        pickle_it("save", filename, previous_state)
+                        return max_tip
 
         # Well... Wasn't a few steps ahead, let's iterate halving the range
         while found == False:
@@ -239,8 +248,8 @@ def get_sync_height(url):
             if previous_check == current_check:
                 logging.info(
                     error(
-                        f"{url} checking stuck at {current_check} -- breaking")
-                )
+                        f"{node_name} checking stuck at {current_check} -- breaking"
+                    ))
                 break
             logging.info(muted(f"{url} checking at {current_check}"))
             check = check_block(url, current_check)
@@ -265,7 +274,7 @@ def get_sync_height(url):
         previous_state['tip_height'] = current_check
         pickle_it('save', filename, previous_state)
 
-        logging.info(success(f"{url} at {current_check}"))
+        logging.info(success(f"{node_name} at {current_check}"))
         return current_check
 
 
