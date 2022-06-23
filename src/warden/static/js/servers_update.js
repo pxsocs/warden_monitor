@@ -41,8 +41,10 @@ $(document).ready(function () {
     update_stats();
 
     $("#hidden-add-node").hide();
-    $("#add_node").click(function () {
-        $("#hidden-add-node").slideToggle("medium");
+    $("#server_table").show();
+
+    $("#toggle_nodes").click(function () {
+        $("#server_table").slideToggle("medium");
     });
 
     // New node being included
@@ -317,7 +319,7 @@ function update_price() {
             }
 
             online = true
-            $('#price_info').html('<span style="color: lightgreen;"><i class="fa fa-btc" aria-hidden="true"></i>&nbsp;NgU Tech</span>');
+            $('#price_info').html('<span><i class="fa fa-btc" aria-hidden="true"></i>&nbsp;NgU Tech</span>');
             $(target).animate_number({
                 start_value: initial_price,
                 end_value: current_price,
@@ -400,9 +402,15 @@ function create_table(data) {
                 <td data-bs-toggle="tooltip" data-bs-placement="bottom" title="Click on name to edit">Node</td>
                 <td class="text-center">Latest Block</td>
                 <td class="text-end">Updated</td>
-                <td class="text-center"></td>
-                <td class="text-end"></td>
-                <td class="text-end"></td>
+                <td class="text-end" colspan=3>
+                    <span class="text-small float-end">
+                        <button id="add_node" class="btn btn-outline-light btn-sm">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                        <span id='new_node_txt'>&nbsp;new node</span>
+                        </button>
+                    </span>
+                </td>
+
             </tr>
         </thead>
     `
@@ -501,6 +509,12 @@ function create_table(data) {
     // Close Table
     table += '</table>';
     $(content_id).html(table);
+
+    $("#add_node").click(function () {
+        $("#hidden-add-node").slideToggle("medium");
+    });
+
+
     // Check if edit name is clicked, then change html
     $(".edit_name").click(function () {
         // Get node information from table
@@ -524,7 +538,7 @@ function create_table(data) {
         $("#save_node_txt").text("update");
         // Include Delete Button
         delete_button = `
-            <button id="delete_node" class="btn btn-outline-danger btn-block">
+            <button id="delete_node" class="btn btn-outline-danger btn-sm">
             <i class="fa fa-trash-o" aria-hidden="true"></i>
             </button>`
         $("#delete_node_button").html(delete_button)
