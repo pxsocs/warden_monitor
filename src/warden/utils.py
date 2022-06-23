@@ -225,3 +225,23 @@ def join_all(threads, timeout):
         num = len(still_running)
         names = [t.name for t in still_running]
         raise RuntimeError('Timeout on {0} threads: {1}'.format(num, names))
+
+
+def jformat(n, places, divisor=1):
+    if n is None:
+        return "-"
+    else:
+        try:
+            n = float(n)
+            n = n / divisor
+            if n == 0:
+                return "-"
+        except ValueError:
+            return "-"
+        except TypeError:
+            return (n)
+        try:
+            form_string = "{0:,.{prec}f}".format(n, prec=places)
+            return form_string
+        except (ValueError, KeyError):
+            return "-"

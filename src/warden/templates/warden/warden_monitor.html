@@ -46,7 +46,7 @@
           <span class="text-small float-end">
             <button id="add_node" class="btn btn-outline-light btn-sm">
               <i class="fa fa-plus-square" aria-hidden="true"></i>
-              new node
+              <span id='new_node_txt'>new node</span>
             </button>
           </span>
         </header>
@@ -84,16 +84,16 @@
 
     <div class="col-2 text-end align-end">
       <button id="save_node" class="btn btn-outline-light btn-block">
-        <i class="fa fa-plus-square" aria-hidden="true"></i>
-        save
+        <span id='save_node_txt'>save</span>
       </button>
+      <span id='delete_node_button'></span>
     </div>
   </div>
 
     <div class="row">
       <div class="col-12">
         <div class="content-section" id="server_table">
-          <span class="text-small loadanim">Loading Servers...</span>
+          <span class="text-small loadanim">gathering node info...</span>
         </div>
       </div>
     </div>

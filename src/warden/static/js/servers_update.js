@@ -23,7 +23,7 @@ const private_icon = `<span data-bs-toggle="tooltip" data-bs-placement="top" tit
     <i class="fa fa-user-secret text-success" aria-hidden="true"></i>
     </span>`
 
-const public_icon = `<span data-bs-toggle="tooltip" data-bs-placement="top" title="this is a public node - exercise caution when requesting private information like txs and bitcoin addresses - they may be linked to your IP address">
+const public_icon = `<span class="public_node" data-bs-toggle="tooltip" data-bs-placement="top" title="this is a public node - exercise caution when requesting private information like txs and bitcoin addresses - they may be linked to your IP address">
     <i class="fa fa-users text-muted" aria-hidden="true"></i>
     </span>`
 
@@ -47,42 +47,7 @@ $(document).ready(function () {
 
     // New node being included
     $("#save_node").click(function () {
-
-        node_name = $("#new_node_name").val();
-        node_url = $("#new_node_url").val();
-        is_private_node = document.getElementById("is_private_node");
-        is_private_node = is_private_node.checked;
-        send_message(`including node ${node_name}. please wait...`, 'info');
-        data = {
-            ["node_name"]: node_name,
-            ["node_url"]: node_url,
-            ["is_private_node"]: is_private_node
-        }
-        json_data = JSON.stringify(data)
-
-        $.ajax({
-            type: "POST",
-            contentType: 'application/json',
-            dataType: "json",
-            data: json_data,
-            url: "/node_action",
-            success: function (data_back) {
-                if (data_back == 'success') {
-                    send_message(`Node ${node_name} added successfully. Please allow a few seconds before it shows in the list.`, 'success');
-                } else {
-                    send_message(`Node ${node_name} failed to be included.<br> Error: ${data_back}`, 'muted');
-                }
-                $("#hidden-add-node").slideToggle("medium");
-            },
-            error: function (xhr, status, error) {
-                console.log(status);
-                console.log(error);
-                alerts_html = $('#alerts').html();
-                send_message(`an error occured while adding node. message: ${status} | ${error}`, 'danger')
-            }
-        });
-
-
+        add_edit_node();
     });
 
     $("#wisdom_text").hide();
@@ -91,6 +56,48 @@ $(document).ready(function () {
         $("#wisdom_text").slideToggle("medium");
     });
 });
+
+
+function add_edit_node(action = undefined) {
+    node_name = $("#new_node_name").val();
+    node_url = $("#new_node_url").val();
+    is_private_node = document.getElementById("is_private_node");
+    is_private_node = is_private_node.checked;
+    send_message(`including node ${node_name}. please wait...`, 'info');
+    data = {
+        ["node_name"]: node_name,
+        ["node_url"]: node_url,
+        ["is_private_node"]: is_private_node
+    }
+    if (action != undefined) {
+        data["action"] = action;
+    }
+    json_data = JSON.stringify(data)
+
+    $.ajax({
+        type: "POST",
+        contentType: 'application/json',
+        dataType: "json",
+        data: json_data,
+        url: "/node_action",
+        success: function (data_back) {
+            if (data_back == 'success') {
+                send_message(`Node ${node_name} added successfully. Please allow a few seconds before it shows in the list.`, 'success');
+            } else if (data_back.includes('deleted')) {
+                send_message(`Node ${node_name} deleted`, 'danger');
+            } else {
+                send_message(`Node ${node_name} failed to be included.<br> Error: ${data_back}`, 'muted');
+            }
+            $("#hidden-add-node").slideToggle("medium");
+        },
+        error: function (xhr, status, error) {
+            console.log(status);
+            console.log(error);
+            alerts_html = $('#alerts').html();
+            send_message(`an error occured while adding node. message: ${status} | ${error}`, 'danger')
+        }
+    });
+};
 
 
 
@@ -372,7 +379,7 @@ function create_table(data) {
     table += `
         <thead>
             <tr class='small-text'>
-                <td>Source</td>
+                <td data-bs-toggle="tooltip" data-bs-placement="bottom" title="Click on name to edit">Node</td>
                 <td class="text-center">Latest Block</td>
                 <td class="text-end">Updated</td>
                 <td class="text-center"></td>
@@ -384,14 +391,15 @@ function create_table(data) {
 
 
 
-
     $.each(data, function (key_x, row) {
+
         // Start Row
         table += "<tr class='box'>";
 
+        // Do not update this html if currently being edited
 
         // Name
-        table += '<td class="text-start">' + row.name + '</td>';
+        table += '<td class="text-start datainfo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Click on name to edit"><span class="edit_name">' + row.name + '</span></td>';
 
         // Latest Block
         tip_height = row.tip_height
@@ -462,7 +470,7 @@ function create_table(data) {
         table += '</td>'
 
         // Add link to URL
-        table += '<td class="text-end">'
+        table += '<td class="text-end node_url">'
         table += '<a href="' + row.url + '" target="_blank" class="text-white"> <i class="fa fa-external-link" aria-hidden="true"></i></a>'
         table += '</td>'
         // Close Row
@@ -473,5 +481,37 @@ function create_table(data) {
     // Close Table
     table += '</table>';
     $(content_id).html(table);
+    // Check if edit name is clicked, then change html
+    $(".edit_name").click(function () {
+        // Get node information from table
+        node_name = $(this).text();
+        node_url = $(this).parent().parent().find('.node_url').html()
+        node_url = node_url.match(/href="([^"]*)/)[1];
+        node_public = $(this).parent().parent().find('.public_node').html()
+        if (node_public != undefined) {
+            node_public = true
+        } else {
+            node_public = false
+        }
+        // Open new node edit and change values
+        $("#hidden-add-node").show("medium");
+        $("#new_node_name").val(node_name);
+        $("#new_node_url").val(node_url);
+        is_private_node = document.getElementById("is_private_node");
+        is_private_node.checked = !node_public;
+        // Change button text
+        $("#new_node_txt").text("edit node");
+        $("#save_node_txt").text("update");
+        // Include Delete Button
+        delete_button = `
+            <button id="delete_node" class="btn btn-outline-danger btn-block">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+            </button>`
+        $("#delete_node_button").html(delete_button)
+        $("#delete_node_button").click(function () {
+            add_edit_node(action = 'delete')
+        });
+
+    });
 
 }

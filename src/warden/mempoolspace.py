@@ -9,7 +9,7 @@ from utils import pickle_it, safe_filename
 from connections import tor_request, url_reachable
 from ansi_management import (warning, success, error, info, clear_screen,
                              muted, yellow, blue)
-from utils import join_all
+from utils import jformat
 from decorators import MWT
 
 
@@ -71,10 +71,7 @@ def server_names(action=None, url=None, name=None, public=True):
         for st in custom_names:
             try:
                 if st[0] == url:
-                    status = st
-                    status['online'] = False
                     custom_names.remove(st)
-                    custom_names.append(status)
             except Exception:
                 pass
         # Save pickle
@@ -188,13 +185,13 @@ def get_sync_height(url):
     if max_tip == 'file not found':
         raise Exception("max_tip_height.pkl not found")
 
+    previous_state = pickle_it('load', filename)
     # Check if max tip height returns a message
     # if not, fully synched
     check = check_block(url, max_tip)
     if check != message:
         logging.info(muted("No need to iterate " + url))
         logging.info(success(f"{url} at {max_tip}"))
-        previous_state = pickle_it('load', filename)
         if previous_state != 'file not found':
             previous_state['tip_height'] = max_tip
         else:
@@ -206,11 +203,21 @@ def get_sync_height(url):
         # it finds the data, then we can iterate from there
         # This process is time consuming. Needs to be optimized later.
         start = 0
-
         end = max_tip
         found = False
+        current_check = 0
         while found == False:
+            previous_check = current_check
             current_check = int((end + start) / 2)
+            previous_state[
+                'tip_height'] = f"<span class='text-warning'>Node not synched. Finding synch status<br>[currently checking block: {str(jformat(current_check, 0))}]<br>latest block tip at <status>"
+            pickle_it('save', filename, previous_state)
+            if previous_check == current_check:
+                logging.info(
+                    error(
+                        f"{url} checking stuck at {current_check} -- breaking")
+                )
+                break
             logging.info(muted(f"{url} checking at {current_check}"))
             check = check_block(url, current_check)
             # Two outcomes - either not found, means we need to go lower, or found

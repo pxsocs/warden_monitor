@@ -54,6 +54,13 @@ def node_action():
         try:
             data = json.loads(request.data)
             url = url_parser(data['node_url'])
+            if 'action' in data:
+                if data['action'] == 'delete':
+                    node_name = data['node_name']
+                    server_names('delete', url)
+                    return json.dumps(f"{node_name} deleted")
+
+            url = url_parser(data['node_url'])
             # Check if this URL is reachable
             is_reachable = url_reachable(url)
             if is_reachable == False:

@@ -29,7 +29,7 @@ html{
 }
 
 .datainfo:hover {
-   cursor: help;
+   cursor: pointer!important;
 }
 
 .content-section {
