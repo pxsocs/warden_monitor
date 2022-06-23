@@ -55,6 +55,7 @@ $(document).ready(function () {
     $("#add_wisdom").click(function () {
         $("#wisdom_text").slideToggle("medium");
     });
+
 });
 
 
@@ -172,21 +173,41 @@ function update_max_height() {
         target = '#max_height';
         url = '/get_pickle?filename=max_tip_height&serialize=False';
         max_height = ajax_getter(url);
+
         if (max_height == 'file not found') {
             return
         } else {
-            // Get current screen price
+            // Get current height at the screen
             current_height = parseFloat($(target).html().replace(',', ''));
             // If parser returns NaN (can happen if there's text) then set initial price to 0
             if (isNaN(current_height)) {
                 current_height = 0;
             }
-            // Grab latest price
+            // Grab latest height
             max_height = parseFloat(max_height);
+
+            // Nothing returned, just send the text back and mute the text
             if (isNaN(max_height)) {
                 $(target).html("<span class='text-muted'>" + $(target).text() + "</span>");
                 return
             }
+
+            // TICK TOCK NEXT BLOCK
+            if (max_height == (current_height + 1)) {
+                // Block height just increased. TICK TOCK NEXT BLOCK!
+                console.log("Tick. Tock. Next Block.")
+                $("#header_div").removeClass("bg-steel");
+                $("#header_div").addClass("background-mover");
+                $("#header_message").html("<span class='text-white text-bold'>new bitcoin block found</span>")
+                    .delay(10000)
+                    .fadeOut(function () {
+                        $("#header_message").fadeOut('slow');
+                        $("#header_div").addClass("bg-steel");
+                        $("#header_div").removeClass("background-mover");
+                    });
+
+            }
+
             $(target).animate_number({
                 start_value: current_height,
                 end_value: max_height,
@@ -273,7 +294,7 @@ function update_price() {
             }
             // Grab latest price
             try {
-                current_price = parseFloat(latest_price['price']);
+                current_price = parseInt(latest_price['price']);
             } catch (e) {
                 current_price = NaN
             }
@@ -294,7 +315,7 @@ function update_price() {
             difference_str = timeDifference(currentTimeStamp, price_updated)
             minutes_ago = difference_numb / 1000 / 60
             if (minutes_ago >= 3) {
-                $(target).html("<span class='text-muted'>" + (formatNumber(latest_price['price'], 2, "$ ")) + "</span>");
+                $(target).html("<span class='text-muted'>" + (formatNumber(latest_price['price'], 0, "$ ")) + "</span>");
                 $('#price_info').html("price feed delayed <br> last updated " + difference_str);
                 return
             }
@@ -305,6 +326,7 @@ function update_price() {
                 start_value: initial_price,
                 end_value: current_price,
                 duration: 500,
+                decimals: 0,
                 delimiter: ',',
                 prepend: '$ ',
 
@@ -431,7 +453,6 @@ function create_table(data) {
             table += '<td class="text-end small-text">' + timeDifference(currentTimeStamp, updated_time) + '</td>';
         } catch {
             table += '<td class="text-end small-text text-warning"> error checking. retrying...</td>';
-            console.log(currentTimeStamp)
         }
 
         // Info & Pills

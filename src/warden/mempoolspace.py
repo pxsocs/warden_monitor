@@ -185,6 +185,7 @@ def get_sync_height(url):
     if max_tip == 'file not found':
         raise Exception("max_tip_height.pkl not found")
 
+    # Get this node previous state
     previous_state = pickle_it('load', filename)
     # Check if max tip height returns a message
     # if not, fully synched
@@ -206,12 +207,35 @@ def get_sync_height(url):
         end = max_tip
         found = False
         current_check = 0
+
+        # First let's step a few blocks ahead from the last one we found
+        # this may be quicker
+        steps_ahead = 3
+        if previous_state != 'file not found':
+            last_tip = previous_state['tip_height']
+            for i in range(steps_ahead):
+                current_check = last_tip + i + 1
+                logging.info(
+                    muted(f"Checking [steps ahead] {url} at {current_check}"))
+                check = check_block(url, current_check)
+                if check != message:
+                    logging.info(success(f"{url} synched at {current_check}"))
+                    max_tip = current_check
+                    previous_state['tip_height'] = max_tip
+                    pickle_it("save", filename, previous_state)
+                    return max_tip
+
+        # Well... Wasn't a few steps ahead, let's iterate halving the range
         while found == False:
             previous_check = current_check
             current_check = int((end + start) / 2)
-            previous_state[
-                'tip_height'] = f"<span class='text-warning'>Node not synched. Finding synch status<br>[currently checking block: {str(jformat(current_check, 0))}]<br>latest block tip at <status>"
-            pickle_it('save', filename, previous_state)
+            try:
+                previous_state[
+                    'tip_height'] = f"<span class='text-warning'>Node not synched. Finding synch status<br>[currently checking block: {str(jformat(current_check, 0))}]<br>latest block tip at <status>"
+                pickle_it('save', filename, previous_state)
+            except TypeError:
+                pass
+
             if previous_check == current_check:
                 logging.info(
                     error(

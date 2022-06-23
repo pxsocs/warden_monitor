@@ -62,36 +62,23 @@
   <body id="page-top">
     <!-- Navigation-->
 
-    <nav
-      class="navbar navbar-dark bg-steel navbar-expand-lg navbar-font justify-content-end"
-    >
-      <a class="dashboard-header navbar-brand" href="#page-top">Node Monitor</a>
-      <!-- <button
-          class="navbar-toggler navbar-toggler-right"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarResponsive"
-          aria-controls="navbarResponsive"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          Menu
-          <i class="fa fa-bars" aria-hidden="true"></i>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{{url_for('warden.main_page')}}"
-                >Main Page</a
-              >
-            </li>
-          </ul>
-        </div>
-      </div> -->
-    </nav>
-
     <!-- Main Content -->
     <div class="container-fluid">
+      <div id="header_div" class="row bg-steel">
+        <div class="col-9 dashboard-header text-start">
+          <span id="header_message"></span>
+        </div>
+        <div class="col-3 dashboard-header text-end text-white">
+          <a
+            class="text-white"
+            href="/"
+            style="text-decoration: none; font-size: 110%; font-weight: normal"
+          >
+            Node Monitor
+          </a>
+        </div>
+      </div>
+
       <div class="row" id="message_alert_area" hide>
         {% with messages = get_flashed_messages(with_categories=true) %} {% if
         messages %} {% for category, message in messages %}

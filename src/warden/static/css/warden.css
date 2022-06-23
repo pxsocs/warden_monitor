@@ -359,3 +359,23 @@ hr {
    height:70%;
 }
 
+
+
+.background-mover {
+  background: linear-gradient(90deg, #c1c6cb, #757575, rgba(255, 255, 255, .1));
+  background-size: 200% 200%;
+  animation: Animation 15s linear infinite;
+}
+
+@-webkit-keyframes Animation {
+  0%{
+    background-position-x: 200%
+  }
+  100%{
+    background-position-x: 0%
+  }
+}
+
+.text-bold {
+  font-weight: bold;
+}
