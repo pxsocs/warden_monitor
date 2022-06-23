@@ -194,7 +194,10 @@ def get_sync_height(url):
         logging.info(muted("No need to iterate " + url))
         if previous_state != 'file not found':
             previous_state['tip_height'] = max_tip
-            node_name = previous_state['name']
+            try:
+                node_name = previous_state['name']
+            except KeyError:
+                node_name = 'Unknown'
         else:
             previous_state = {'tip_height': max_tip}
             node_name = f'Unknown node at {url}'

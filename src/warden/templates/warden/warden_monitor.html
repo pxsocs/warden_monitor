@@ -46,7 +46,7 @@
           <span class="text-small float-end">
             <button id="add_node" class="btn btn-outline-light btn-sm">
               <i class="fa fa-plus-square" aria-hidden="true"></i>
-              <span id='new_node_txt'>new node</span>
+              <span id='new_node_txt'>&nbsp;new node</span>
             </button>
           </span>
         </header>
@@ -105,38 +105,56 @@
           Satoshi Nakamoto
           <span class="text-small float-end">
             <button id="add_wisdom" class="btn btn-outline-light btn-sm">
-              <i class="fa fa-history" aria-hidden="true"></i>
-              quotes
+              <i class="fa fa-quote-left" aria-hidden="true"></i>
+              &nbsp;quotes
             </button>
           </span>
         </header>
       </div>
     </div>
 
-    <div class="row" id="wisdom_text" style="padding-top: 20px">
+    <div class="row">
       <div class="col-12">
-        <div class="quotebox">
-          <div class="text"></div>
+        <div class="content-section" id="wisdom_text">
+      <div class="row">
+        <div class="row">
+          <div class="col-12">
+                  <div id="quote_satoshi" class="quotebox"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12 text-start">
+            <footer style="padding-top: 20px" class="blockquote-footer">
+              Satoshi Nakamoto in
+              <cite id="load_source" title="Source Title">...</cite>
+            </footer>
+            <footer class="blockquote-footer">
+              <cite id="load_date">...</cite>
+            </footer>
+            <small>
+              Source:
+              <a class='text-white'
+                href="https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json"
+                target="_blank"
+                >Nakamoto Institute</a
+              >
+            </small>
+
+          </div>
+        <div class='row' style='padding-top: 20px;'>
+          <div class='col-12'>
+            <span class="text-small">
+              <button id="refresh_satoshi" class="btn btn-outline-light btn-block btn-sm">
+                      <i class="fa fa-refresh" aria-hidden="true"></i>
+                      &nbsp;refresh quote
+              </button>
+            </span>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-12 text-start">
-          <footer style="padding-top: 20px" class="blockquote-footer">
-            Satoshi Nakamoto in
-            <cite id="load_source" title="Source Title">...</cite>
-          </footer>
-          <footer class="blockquote-footer">
-            <cite id="load_date">...</cite>
-          </footer>
-          <small>
-            Source:
-            <a
-              href="https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json"
-              target="_blank"
-              >Nakamoto Institute</a
-            >
-          </small>
-        </div>
+      </div>
+      </div>
+
       </div>
     </div>
     <script src="{{url_for('static', filename='js/utils.js')}}"></script>

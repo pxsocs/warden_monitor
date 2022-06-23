@@ -37,8 +37,6 @@ html{
     padding: 10px 10px;
     border: 1px solid rgba(255, 255, 255, .1);
     border-radius: 4px;
-    white-space: nowrap;
-    overflow-x: scroll;
     background-color: rgba(255, 255, 255, .1);
 }
 
@@ -340,14 +338,10 @@ hr {
 
 .quotebox {
   font-family:'Roboto Mono',monospace;
-
-  height:100%;
-  width:100%;
-  align-items:center;
-  display:flex;
-  font-weight:100;
   font-size:85%;
-  color:#fafafa;
+  color: white;
+  overflow-wrap: break-word;
+  text-align: justify;
 }
 
 .dud{
@@ -378,4 +372,8 @@ hr {
 
 .text-bold {
   font-weight: bold;
+}
+
+.blockquote-footer {
+  color: white;
 }

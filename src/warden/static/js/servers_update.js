@@ -101,7 +101,6 @@ function add_edit_node(action = undefined) {
 };
 
 
-
 function update_block_details() {
     interval_block = 1000;
     const interval = setInterval(function () {
@@ -221,7 +220,6 @@ function update_max_height() {
 
 }
 
-
 function update_stats() {
     interval_stats = 1000;
     const interval = setInterval(function () {
@@ -274,8 +272,6 @@ function update_stats() {
 
 
 }
-
-
 
 function update_price() {
     interval_ms_price = 1000;
