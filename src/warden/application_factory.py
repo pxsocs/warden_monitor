@@ -9,7 +9,6 @@ import socket
 import emoji
 import sqlite3
 import requests
-from gevent.pywsgi import WSGIServer
 from logging.handlers import RotatingFileHandler
 from packaging import version
 from ansi.colour import fg
