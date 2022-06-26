@@ -1,21 +1,77 @@
 from datetime import datetime
-from fileinput import filename
+from flask import current_app, has_app_context
 from embit import bip32, script
 from embit.networks import NETWORKS
 import threading
 import logging
 import pandas as pd
-from utils import pickle_it, safe_filename
-from connections import tor_request, url_reachable
+from connections import tor_request, url_reachable, url_parser
 from ansi_management import (warning, success, error, info, clear_screen,
                              muted, yellow, blue)
 from utils import jformat
-from decorators import MWT
+
+
+# Method used to search for nodes - used at first config to
+# check for typical nodes and if they are available
+# to then include them in database
+def node_searcher():
+    known_names = [
+        ('http://mempool.space/', 'mempool.space', True),
+        ('http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/',
+         'mempool.space [onion]', True),
+        ('http://raspberrypi.local:4080/', 'RaspiBlitz', False),
+        ('http://umbrel.local:3006/', 'Umbrel', False),
+    ]
+
+    print(" [i] Search for nodes...")
+
+    found_nodes = []
+
+    def check_node(server):
+        url = server[0]
+        print(" [i] Checking for node at " + url)
+        if url_reachable(url) is True:
+            print(" [i] Node at " + url + " is reachable")
+            api_reached, _ = is_url_mp_api(url)
+            if api_reached is True:
+                print(" [i] Node at " + url + " has a mempool.space API")
+                found_nodes.append(server)
+                print(success(" [OK] Found node at " + url))
+                return True
+        else:
+            return False
+
+    threads = []
+
+    for server in known_names:
+        threads.append(threading.Thread(target=check_node, args=[server]))
+
+    for thread in threads:
+        thread.start()
+
+    # Join all threads
+    for thread in threads:
+        thread.join()
+
+    if found_nodes == []:
+        # At a minimum will return one public node
+        # there's actually no reason for this not to be found
+        # unless the app is offline or there's a connection issue
+        # with all the nodes (should not happen)
+        print(
+            yellow(
+                " [i] No nodes found, using only Mempool.space - you can add a node later"
+            ))
+        found_nodes = [('http://mempool.space/', 'mempool.space', True)]
+    else:
+        print(success(" [i] Found " + str(len(found_nodes)) + " nodes"))
+        print("")
+
+    return found_nodes
 
 
 # Creates a list of URLs and names for the public and private addresses
-@MWT(timeout=1)
-def server_names(action=None, url=None, name=None, public=True):
+def node_actions(action=None, url=None, name=None, public=True):
     # Sample list_all output:
     # [
     #   ('http://raspberrypi.local:4080/', 'RaspiBlitz Home', False),
@@ -23,238 +79,170 @@ def server_names(action=None, url=None, name=None, public=True):
     #   ('http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/', 'mempool.space [onion]', True)
     # ]
 
-    # These are already known names and urls for public mempoolspace servers
-    known_names = [
-        ('http://mempool.space/', 'mempool.space', True),
-        ('http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/',
-         'mempool.space [onion]', True),
-    ]
-    custom_names = pickle_it('load', 'mps_custom_names.pkl')
-
-    # If the file does not exist, add the standard names above
-    if custom_names == 'file not found':
-        custom_names = known_names
-        pickle_it('save', 'mps_custom_names.pkl', custom_names)
-
-    if action == None or action == 'list_all' or action == 'list':
-        return custom_names
-
-    # get a name from url
-    if action == 'get':
-        for element in custom_names:
-            if element[0] == url:
-                return element[1]
-        return "Unknown"
-
-    if action == 'get_info':
-        for element in custom_names:
-            if element[0] == url:
-                return element
-        return "Unknown"
+    from models import Nodes
 
     # add name to url (actually it's an add or replace if exists)
     # so add = edit
     if action == 'add':
-        # check if exists, if so, remove
-        for st in custom_names:
-            if st[0] == url:
-                custom_names.remove(st)
-        name = 'Unknown' if name == None else name
-        custom_names.append((url, name, public))
-        pickle_it('save', 'mps_custom_names.pkl', custom_names)
-        # Now that it's included, request an update of this new node
-        check_api_health(url)
-        return
+        # check if exists, if so, load to edit, if not create new
+        from models import load_Node
+        node = load_Node(url=url)
+        if node is None:
+            node = Nodes()
+        node.url = url_parser(url)
+        node.name = name
+        node.is_public = public
+        node = check_api_health(node)
+        current_app.db.session.add(node)
+        current_app.db.session.commit()
+        return node
 
     # Remove name from list
     if action == 'delete' or action == 'remove':
-        for st in custom_names:
-            try:
-                if st[0] == url:
-                    custom_names.remove(st)
-            except Exception:
-                pass
-        # Save pickle
+        node = Nodes.query.filter_by(url=url).first()
+        current_app.db.session.delete(node)
+        current_app.db.session.commit()
 
-    pickle_it('save', 'mps_custom_names.pkl', custom_names)
+    if action == 'get':
+        if url is not None:
+            node = Nodes.query.filter_by(url=url).first()
+        if name is not None:
+            node = Nodes.query.filter_by(name=name).first()
+        return node
 
-    return custom_names
-
-
-# Creates background thread to check all servers
-def check_all_servers():
-    logging.info(muted("Checking all servers"))
-    mp_addresses = server_names()
-    urls = [i[0] for i in mp_addresses]
-
-    threads = []
-
-    for url in urls:
-        threads.append(threading.Thread(target=check_api_health, args=[url]))
-
-    for thread in threads:
-        thread.start()
-    # Join all threads
-    for thread in threads:
-        thread.join()
-
-    logging.info(success("All servers threads concluded"))
-
-
-# This process can be time consuming
-# so we need to check in parallel with threads
-@MWT(timeout=10)
-def check_all_tip_heights():
-    logging.info(muted("Checking all tip heights"))
-    mp_addresses = server_names()
-    urls = [i[0] for i in mp_addresses]
-    threads = []
-
-    for url in urls:
-        threads.append(threading.Thread(target=get_sync_height, args=[url]))
-
-    for thread in threads:
-        thread.start()
-    # Join all threads
-    for thread in threads:
-        thread.join()
-
-    logging.info(success("All servers get_tip threads concluded"))
-
-
-@MWT(timeout=15)
-def is_synched(url):
-    logging.info(muted("Checking if " + url + " is synched"))
-
-    endpoint = 'api/block-height/'
-    max_tip = pickle_it('load', 'max_tip_height.pkl')
-    if max_tip == 'file not found':
-        max_tip = 100
-    result = tor_request(url + endpoint + str(max_tip))
-    try:
-        r = result.text
-    except Exception as e:
-        logging.info(warning(url + " synch check failed. Error: " + str(e)))
-        return False
-    bad_response = 'Block height out of range'
-    if r == bad_response:
-        logging.info(warning(url + " is not synched"))
-        return False
-    else:
-        logging.info(success(url + " is synched"))
-        return True
+    # No action, just list all
+    nodes = Nodes.query.all()
+    return nodes
 
 
 # Returns the highest block height in all servers
-@MWT(timeout=30)
 def get_max_height():
-    max_tip_height = pickle_it('load', 'max_tip_height.pkl')
-    if max_tip_height == 'file not found':
-        max_tip_height = 0
-    max_tip_height = 0
+    from models import load_Node, Nodes
+    from sqlalchemy import func
+    url = None
+    max_tip_height = current_app.db.session.query(
+        func.max(Nodes.blockchain_tip_height)).first()[0]
+    node = Nodes.query.filter_by(node_tip_height=max_tip_height).first()
+    if node is not None:
+        url = node.url
 
-    # Load server list from pickle
-    servers = server_names()
-    for server in servers:
-        end_point = 'api/blocks/tip/height'
-        url = server[0]
-        this_highest = tor_request(url + end_point)
+    # If even after looking for nodes, still couldn't find a max height,
+    # use mempool.space url to check
+    if max_tip_height == 0:
+        url = 'https://mempool.space/api/blocks/tip/height'
         try:
-            this_highest = int(this_highest.text)
-        except Exception:
-            this_highest = 0
-
-        max_tip_height = max(max_tip_height, this_highest)
+            max_tip_height = tor_request(url).text
+            max_tip_height = int(max_tip_height)
+        except Exception as e:
+            max_tip_height = 'unknown'
 
     # Save for later consumption
-    pickle_it('save', 'max_tip_height.pkl', max_tip_height)
+    from models import update_GlobalData
+    update_GlobalData('max_blockchain_tip_height', max_tip_height)
+    # Get the full block details for later consumption
+    if url is not None:
+        top_block_details = get_last_block_info(url, max_tip_height)
+        if top_block_details is not None:
+            update_GlobalData('top_block_details', top_block_details)
+
     return max_tip_height
 
 
 # Mempoolspace API does not return the latest block height
 # that is synched on the server.
 # So, as an alternative, we can iterate and check where we are
-def get_sync_height(url):
-    logging.info(muted("Checking tip height for " + url))
+def get_sync_height(node):
+    url = node.url
+    logging.info(muted("Checking tip height for " + node.name))
+    # Message returned by API when block is not found at node
     message = 'Block height out of range'
-    filename = "save_status/" + safe_filename(url) + '.pkl'
-    max_tip = pickle_it('load', 'max_tip_height.pkl')
-    if max_tip == 'file not found':
-        max_tip = get_max_height()
-    # Check again - know if cannot happen
-    if max_tip == 'file not found':
-        raise Exception("max_tip_height.pkl not found")
 
-    # Get this node previous state
-    previous_state = pickle_it('load', filename)
+    # Get the max tip height
+    from models import load_GlobalData
+    max_tip = load_GlobalData(data_name='max_blockchain_tip_height',
+                              value=True)
+    logging.info(
+        muted("Checking tip height for " + node.name + " - max tip: " +
+              str(max_tip)))
+
     # Check if max tip height returns a message
     # if not, fully synched
     check = check_block(url, max_tip)
-    if check != message:
-        logging.info(muted("No need to iterate " + url))
-        if previous_state != 'file not found':
-            previous_state['tip_height'] = max_tip
-            try:
-                node_name = previous_state['name']
-            except KeyError:
-                node_name = 'Unknown'
-        else:
-            previous_state = {'tip_height': max_tip}
-            node_name = f'Unknown node at {url}'
-        pickle_it('save', filename, previous_state)
-        logging.info(success(f"{node_name} at {max_tip}"))
-        return max_tip
+    if ((check != message) and (check is not None)):
+        logging.info(muted("No need to iterate " + node.name))
+        logging.info(success(f"{node.name} synched at {max_tip}"))
+        if max_tip != 0:
+            node.node_tip_height = max_tip
+        return node
     else:
+        # Maybe it fell behind by one block?
+        # Can happen on Onion and/or slow connections
+        check_previous = max_tip - 1
+        check = check_block(url, check_previous)
+        if check != message and max_tip != 0:
+            node.node_tip_height = check_previous
+            return node
+
+        logging.info(
+            blue(f"{node.name} is not fully synched - will need to iterate"))
         # Could not find the tip. Let's see if halfway through the chain
         # it finds the data, then we can iterate from there
         # This process is time consuming. Needs to be optimized later.
-        start = 0
-        end = max_tip
-        found = False
-        current_check = 0
 
         # First let's step a few blocks ahead from the last one we found
         # this may be quicker
         steps_ahead = 3
-        if previous_state != 'file not found':
-            node_name = previous_state['name']
-            last_tip = previous_state['tip_height']
-            if isinstance(last_tip, int):
-                for i in range(steps_ahead):
-                    current_check = last_tip + i + 1
-                    # No need to check after top tip
-                    if current_check > max_tip:
-                        break
-                    logging.info(
-                        muted(
-                            f"Checking [steps ahead] {node_name} at {current_check}"
-                        ))
-                    check = check_block(url, current_check)
-                    if check != message:
+        if isinstance(node.node_tip_height, int):
+            if node.node_tip_height > 0:
+                last_tip = node.node_tip_height
+                if isinstance(last_tip, int):
+                    for i in range(steps_ahead):
+                        current_check = last_tip + i + 1
+                        # No need to check after top tip
+                        if current_check >= max_tip:
+                            break
                         logging.info(
-                            success(f"{node_name} synched at {current_check}"))
-                        previous_state['tip_height'] = current_check
-                        pickle_it("save", filename, previous_state)
-                        return max_tip
+                            muted(
+                                f"Checking [steps ahead] {node.name} at {current_check}"
+                            ))
+                        check = check_block(url, current_check)
+                        if check != message:
+                            logging.info(
+                                success(
+                                    f"[step ahead success] {node.name} synched at {current_check}"
+                                ))
+                            node.node_tip_height = current_check
+                            return node
+        logging.info(
+            error(f"[step ahead failed - proceed to halfing] {node.name}"))
 
         # Well... Wasn't a few steps ahead, let's iterate halving the range
-        while found == False:
+        found_tip = False
+        current_check = 0
+        start = 0
+        end = max_tip
+        if max_tip == 0:
+            return node
+        while found_tip is False:
+            logging.info(blue(f"Checking {node.name} starting halving..."))
             previous_check = current_check
             current_check = int((end + start) / 2)
+            logging.info(blue(f"Checking {node.name} at {current_check}"))
+            if current_check == 0:
+                current_check = 'unknown'
+                break
             try:
-                previous_state[
-                    'tip_height'] = f"<span class='text-warning'>Node not synched. Finding synch status<br>[currently checking block: {str(jformat(current_check, 0))}]<br>latest block tip at <status>"
-                pickle_it('save', filename, previous_state)
+                node.node_tip_height = f"<span class='text-warning'>Node not synched. Finding synch status<br>[currently checking block: {str(jformat(current_check, 0))}]<br>latest block tip at <status>"
             except TypeError:
                 pass
 
             if previous_check == current_check:
                 logging.info(
                     error(
-                        f"{node_name} checking stuck at {current_check} -- breaking"
+                        f"{node.name} checking stuck at {current_check} -- breaking"
                     ))
                 break
-            logging.info(muted(f"{url} checking at {current_check}"))
+            logging.info(muted(f"{node.name} checking at {current_check}"))
             check = check_block(url, current_check)
             # Two outcomes - either not found, means we need to go lower, or found
             if check == message:
@@ -263,25 +251,43 @@ def get_sync_height(url):
                 # OK, the check is ok. Let's see if we can find the next one
                 check_next = check_block(url, current_check + 1)
                 if check_next == message:
-                    found = True
+                    found_tip = True
                 # The next one was also found so we need to look higher
                 else:
                     start = current_check + 1
 
-        # Update the saved pkl for this server
-        if url is None:
-            return None
-
         # Load previous status, update and save
-        previous_state = pickle_it('load', filename)
-        previous_state['tip_height'] = current_check
-        pickle_it('save', filename, previous_state)
+        if current_check > 0:
+            node.node_tip_height = current_check
+            logging.info(
+                success(
+                    f"{node.name} [halfing iter] synched at {current_check}"))
+        return node
 
-        logging.info(success(f"{node_name} at {current_check}"))
-        return current_check
+
+# Get Block Header and return when was it found
+def get_last_block_info(url, height):
+    # Get Hash
+    end_point = 'api/block-height/' + str(height)
+    hash = tor_request(url + end_point)
+    try:
+        hash = hash.text
+    except AttributeError:
+        return None
+    if hash == 'Block height out of range':
+        logging.info(
+            error("Block height out of range -- could not get latest time"))
+        return None
+    # Know get the latest data
+    end_point = 'api/block/' + hash
+    block_info = tor_request(url + end_point)
+    try:
+        block_info = block_info.json()
+    except Exception:
+        return None
+    return (block_info)
 
 
-@MWT(timeout=600)
 def check_block(url, block):
     end_point = 'api/block-height/'
     try:
@@ -293,20 +299,36 @@ def check_block(url, block):
 
 
 # Check if this url is a mempool.space API
+# returns true if reachable + request time
+# zero = no response or error
 def is_url_mp_api(url):
-    end_point = endpoint = 'api/blocks/tip/height'
+    end_point = 'api/blocks/tip/height'
     requests = tor_request(url + end_point)
     try:
         if requests.status_code == 200:
-            return True
+            return (True, requests.elapsed)
         else:
-            return False
+            return (False, 0)
     except Exception:
-        return False
+        return (False, 0)
 
 
-@MWT(timeout=2)
-def check_api_health(url):
+# Get the highest tip height from a certain url
+# this is not the synch tip height but rather
+# the block with most proof of work - that can be
+# ahead of the synch tip height
+def get_tip_height(url):
+    endpoint = 'api/blocks/tip/height'
+    result = tor_request(url + endpoint)
+    try:
+        result = result.text
+        result = int(result)
+        return result
+    except Exception:
+        return None
+
+
+def check_api_health(node):
     # . Reachable
     # . ping time
     # . Last time reached
@@ -319,177 +341,56 @@ def check_api_health(url):
     # . progress
     # . blocks behind
 
-    # make a safe filename for this url
-    filename = "save_status/" + safe_filename(url) + '.pkl'
+    logging.info(muted("Checking server: " + node.name))
+    url = node.url
 
-    if url is None:
-        return None
+    # Store ping time and return that it's reacheable
+    reachable, ping = is_url_mp_api(url)
+    node.mps_api_reachable = reachable
+    node.ping_time = ping
 
-    # Get name info for this server
-    server_data = server_names('get_info', url)
-
-    logging.info(muted("Checking server: " + server_data[1]))
-
-    # Load previous status
-    previous_state = pickle_it('load', filename)
-
-    if previous_state == 'file not found':
-        logging.info(error(server_data[1] +
-                           ' has not been previously checked'))
-        current_state = {
-            'filename': filename,
-            'name': 'loading...',
-            'url': url,
-            'online': 'loading...',
-            'is_public': 'loading...',
-            'last_check': "Never",
-            'max_tip_height': "loading...",
-            'tip_height': "loading...",
-            'synched': "loading...",
-        }
+    # mps API not found, let's see if at least the node
+    # is alive but it's a problem with API
+    if reachable is False:
+        node.is_reachable = url_reachable(url)
     else:
-        current_state = previous_state
+        node.is_reachable = True
 
-    # Public or Private Node?
-    try:
-        current_state['is_public'] = server_data[2]
-    except IndexError:
-        # If not found default to public as a precaution
-        current_state['is_public'] = True
-
-    # Save Name
-    current_state['name'] = server_data[1]
-
-    # Check if online
-    current_state['online'] = url_reachable(url)
-
-    # Check if API is working
-    current_state['mps_api_reachable'] = is_url_mp_api(url)
-
-    if current_state['mps_api_reachable'] == True:
-        current_state['last_check'] = datetime.utcnow()
-
-    current_state['max_tip_height'] = get_max_height()
-
-    # Check if synched
-    current_state['synched'] = is_synched(url)
+    # Node is online and reachable with a MPS API working
+    # store the last time it was online
+    if node.is_reachable is True:
+        node.last_online = datetime.utcnow()
+        tip = get_tip_height(node.url)
+        if tip is not None:
+            node.blockchain_tip_height = tip
 
     # Other data
-    current_state['onion'] = True if '.onion' in url else False
+    node.onion = True if '.onion' in url else False
 
     local_host_strings = ['localhost', '.local', '192.', '0.0.0.0']
-    current_state['localhost'] = True if any(
-        host in url for host in local_host_strings) else False
+    node.is_localhost = True if any(host in url
+                                    for host in local_host_strings) else False
 
-    # Save pickle
-    pickle_it('save', filename, current_state)
-
-    logging.info(
-        success(server_data[1] + ' checked. Last check: ' +
-                str(current_state['last_check'])))
-
-    return current_state
-
-
-# Which server has the latest updated data?
-# returns server data:
-# {
-#     "filename": "save_status/httpmempoolspace.pkl",
-#     "name": "mempool.space",
-#     "url": "http://mempool.space/",
-#     "online": true,
-#     "is_public": true,
-#     "last_check": "2022-06-21 15:29:39.714141",
-#     "max_tip_height": 741741,
-#     "tip_height": 741741,
-#     "synched": true,
-#     "mps_api_reachable": true,
-#     "onion": false,
-#     "localhost": false
-#   },
-def most_updated_server():
-    servers = server_names()
-    last_update = datetime.min
-    most_updated = None
-    for server in servers:
-        filename = "save_status/" + safe_filename(server[0]) + '.pkl'
-        server_info = pickle_it('load', filename)
-        last_check = server_info['last_check']
-        if last_check > last_update:
-            most_updated = server_info
-            last_check = last_update
-
-    pickle_it('save', 'most_updated.pkl', most_updated)
-    return most_updated
-
-
-# Get Block Header and return when was it found
-@MWT(timeout=30)
-def get_last_block_info(url=None):
-    # if no url is provided, use the first on list
-    if url == None:
-        logging.info(muted("checking last block - using default url "))
-        url = 'https://mempool.space/'
-        logging.info(url)
-
-    logging.info(muted("Checking last block info for: " + url))
-
-    max_tip = pickle_it('load', 'max_tip_height.pkl')
-    if max_tip == 'file not found':
-        max_tip = get_max_height()
-    # Check again - this cannot happen
-    if max_tip == 'file not found':
-        raise Exception("max_tip_height.pkl not found")
-
-    # Get Hash
-    end_point = 'api/block-height/' + str(max_tip)
-    hash = tor_request(url + end_point)
-    hash = hash.text
-
-    if hash == 'Block height out of range':
-        logging.info(
-            error("Block height out of range -- could not get latest time"))
-        return None
-
-    # Know get the latest data
-    end_point = 'api/block/' + hash
-    block_info = tor_request(url + end_point)
-    try:
-        block_info = block_info.json()
-        pickle_it('save', 'last_block_info.pkl', block_info)
-    except Exception:
-        return None
-
-    return (block_info)
-
-
-def get_node_full_data():
-    node_list = server_names()
-    full_list = []
-    for server in node_list:
-        url = server[0]
-        filename = "save_status/" + safe_filename(url) + '.pkl'
-        server_file = pickle_it('load', filename)
-        if server_file != 'file not found':
-            full_list.append(server_file)
-    return full_list
+    # Save the node information to the database
+    return node
 
 
 # get a set of statistics from the nodes
 def nodes_status():
+    from models import load_Node
     stats = {}
     # Load node info
-    full_data = get_node_full_data()
-    max_height = get_max_height()
+    full_data = load_Node()
     stats['check_time'] = datetime.utcnow()
     stats['total_nodes'] = len(full_data)
-    stats['online'] = sum(x.get('online') == True for x in full_data)
-    stats['is_public'] = sum(x.get('is_public') == True for x in full_data)
-    stats['synched'] = sum(x.get('synched') == True for x in full_data)
-    stats['onion'] = sum(x.get('onion') == True for x in full_data)
-    stats['localhost'] = sum(x.get('localhost') == True for x in full_data)
-    stats['at_tip'] = sum(x.get('tip_height') == max_height for x in full_data)
-    pickle_it('save', 'nodes_status.pkl', stats)
+    stats['online'] = sum(x.mps_api_reachable == True for x in full_data)
+    stats['is_public'] = sum(x.is_public == True for x in full_data)
+    stats['at_tip'] = sum(x.is_at_tip() == True for x in full_data)
+    stats['is_onion'] = sum(x.is_onion() == True for x in full_data)
+    stats['is_localhost'] = sum(x.is_localhost == True for x in full_data)
+    # # Save for later consumption
+    from models import update_GlobalData
+    update_GlobalData(data_name='node_stats', data_value=stats)
     return (stats)
 
 

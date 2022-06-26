@@ -1,19 +1,14 @@
 import json
-from flask import Blueprint, current_app, render_template, request
-from flask_sock import Sock
+from platform import node
+from flask import Blueprint, render_template, request, jsonify
 from random import randrange
 from utils import pickle_it
 from connections import tor_request, url_parser, url_reachable
-from mempoolspace import server_names, is_url_mp_api, get_node_full_data
+from mempoolspace import node_actions, is_url_mp_api
 
 sockets = Blueprint("sockets", __name__)
-sock = Sock(app=current_app)
 
-templateData = {
-    "title": "WARden Monitor",
-    "FX": current_app.settings['PORTFOLIO']['base_fx'],
-    "current_app": current_app,
-}
+templateData = {"title": "WARden Monitor"}
 
 # ---------------------------
 #  API Functions
@@ -39,17 +34,29 @@ def satoshi_quotes_json():
     return (quote)
 
 
+@sockets.route("/node_list", methods=['GET'])
+def node_list():
+    # When asked to GET, will return the current list of nodes
+    node_list = node_actions()
+    js = json.dumps(node_list, default=str)
+    return (js)
+
+
+@sockets.route("/initial_search", methods=['POST'])
+def initial_search():
+    if request.method == 'POST':
+        from mempoolspace import node_searcher
+        node_searcher()
+        return json.dumps("success")
+
+
 @sockets.route("/node_action", methods=['GET', 'POST'])
 def node_action():
     # When asked to GET, will return the current list of nodes
     if request.method == 'GET':
-        node_list = server_names()
-        # if an argument is passed, return full node data from files
-        if request.args.get('full_node_data') is not None:
-            full_list = get_node_full_data()
-            return (json.dumps(full_list, indent=4, default=str))
-        # Return only names
-        return (json.dumps(node_list))
+        node_list = node_actions()
+        return json.dumps(node_list, default=str)
+
     if request.method == 'POST':
         try:
             data = json.loads(request.data)
@@ -57,34 +64,24 @@ def node_action():
             if 'action' in data:
                 if data['action'] == 'delete':
                     node_name = data['node_name']
-                    server_names('delete', url)
+                    node_actions('delete', url=url)
                     return json.dumps(f"{node_name} deleted")
 
-            url = url_parser(data['node_url'])
-            # Check if this URL is reachable
-            is_reachable = url_reachable(url)
-            if is_reachable == False:
+            if url_reachable(url) == False:
                 return json.dumps("Node is not reachable. Check the URL.")
             # Check if this URL is a mempool.space API
             if is_url_mp_api(url) == False:
                 return json.dumps(
                     "URL was found but the mempool.space API does not seem to be installed. Check your node apps."
                 )
-            server_names('add',
+            # Include new node
+            node_actions('add',
                          url=url,
                          name=data['node_name'],
                          public=not (data['is_private_node']))
             return json.dumps("success")
         except Exception as e:
-            return (f"Error: {e}")
-
-
-@sockets.route('/socket_connect')
-def socket_connect():
-    # get a list of .pkl files in the pickle directory
-    templateData['title'] = "WebSocket Connection"
-    templateData['pkl_files'] = pickle_it(action='list')
-    return render_template('sockets/socket_connect.html', **templateData)
+            return json.dumps(f"Error: {e}")
 
 
 # Gets a local pickle file and dumps - does not work with pandas df
@@ -106,28 +103,30 @@ def get_pickle():
         return (json.dumps(data_loader, default=str))
 
 
-# ---------------------------
-#  Web Socket Functions
-# ---------------------------
-
-
-@sock.route('/pickle')
-def return_pickle(ws):
-    while True:
-        pkl = ws.receive()
-        try:
-            response = pickle_it('load', pkl)
-            response = json.dumps(response,
-                                  indent=4,
-                                  sort_keys=True,
-                                  default=str)
-        except Exception as e:
-            response = str(e)
-        ws.send(response)
-
-
-@sock.route('/echo')
-def echo(ws):
-    while True:
-        data = ws.receive()
-        ws.send(data)
+@sockets.route("/global_data", methods=['GET'])
+def global_data():
+    from models import load_GlobalData
+    # None provided - load all data
+    data_name = request.args.get("data_name")
+    data = load_GlobalData(data_name)
+    if data_name is None:
+        list_return = []
+        for element in data:
+            data_return = {
+                'data_name': element.data_name,
+                'data_value': element.data_value,
+                'last_updated': element.last_updated,
+                'expires_at': element.expires_at
+            }
+            list_return.append(data_return)
+        return (json.dumps(list_return, default=str))
+    else:
+        if data is None:
+            return json.dumps("No data found")
+        data_return = {
+            'data_name': data.data_name,
+            'data_value': data.data_value,
+            'last_updated': data.last_updated,
+            'expires_at': data.expires_at
+        }
+    return (json.dumps(data_return, default=str))

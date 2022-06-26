@@ -22,7 +22,7 @@ function satoshi_refresh() {
             $('#load_date').html(data['date']);
             $('#subject').html(data['category']);
             $("#add_wisdom").show();
-            $('#refresh_satoshi').html("<i class='fa fa-refresh' aria-hidden='true'></i>&nbsp;refresh quote");
+            $('#refresh_satoshi').html('<i class="fa-solid fa-arrows-rotate"></i>&nbsp;refresh quote');
             $('#refresh_satoshi').prop('disabled', false);
 
         },

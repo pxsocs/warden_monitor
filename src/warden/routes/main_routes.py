@@ -4,7 +4,6 @@ from flask import (Blueprint, redirect, render_template, abort, flash, session,
                    request, current_app, url_for)
 from flask_login import login_user, logout_user, current_user, login_required
 import jinja2
-from utils import pickle_it
 from datetime import datetime
 
 warden = Blueprint("warden", __name__)
@@ -12,18 +11,14 @@ warden = Blueprint("warden", __name__)
 # Minimum TemplateData used for render_template in all routes
 # This ensures FX and current_app are sent to the render page
 # at all times
-templateData = {
-    "title": "WARden Monitor",
-    "FX": current_app.settings['PORTFOLIO']['base_fx'],
-    "current_app": current_app,
-}
+templateData = {"title": "WARden Monitor"}
 
 
 # Main page for WARden
 @warden.route("/", methods=['GET'])
 @warden.route("/warden_monitor", methods=['GET'])
 def main_page():
-    templateData['title'] = "WARden Node Monitor"
+    templateData['title'] = "Monitor"
     return (render_template('warden/warden_monitor.html', **templateData))
 
 

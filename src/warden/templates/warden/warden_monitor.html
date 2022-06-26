@@ -2,7 +2,7 @@
 <div class="col-12">
   <!-- dashboard -->
   <div class="row">
-    <div class="col-3">
+      <div class="col-3">
       <div
         class="text-start"
         data-bs-toggle="tooltip"
@@ -44,7 +44,7 @@
           Private Nodes and Public Services
           <span class="text-small float-end">
             <button id="toggle_nodes" class="btn btn-outline-light btn-sm">
-              <i class="fa fa-hubzilla" aria-hidden="true"></i>
+              <i class="fa-solid fa-circle-nodes"></i>
             </button>
           </span>
           </header>
@@ -55,8 +55,7 @@
   <div
     class="row"
     id="hidden-add-node"
-    style="padding-top: 10px; padding-bottom: 10px"
-  >
+    style="padding-top: 10px; padding-bottom: 10px">
 
     <div class="col-4">
       <input id = 'new_node_name' type="text" class="form-control" placeholder="Node Name" />
@@ -88,79 +87,113 @@
     </div>
   </div>
 
-    <div class="row">
-      <div class="col-12">
-        <div class="content-section" id="server_table">
-          <span class="text-small loadanim">gathering node info...</span>
-        </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="content-section" id="server_table">
+        <span class="text-small loadanim">gathering node info...</span>
       </div>
     </div>
+  </div>
 
-    <!-- Satoshi Quotes -->
-    <div class="row" style="padding-top: 20px">
-      <div class="col-12">
-        <header class="text-left dashboard-header">
-          Satoshi Nakamoto
-          <span class="text-small float-end">
-            <button id="add_wisdom" class="btn btn-outline-light btn-sm">
-              <i class="fa fa-quote-left" aria-hidden="true"></i>
-            </button>
-          </span>
-        </header>
-      </div>
+
+  <!-- Bitcoin Addresses -->
+  <div class="row" style="padding-top: 20px">
+    <div class="col-12">
+      <header class="text-left dashboard-header">
+        Bitcoin Addresses
+        <span class="text-small float-end">
+          <button id="toggle_addresses" class="btn btn-outline-light btn-sm">
+            <i class="fa-solid fa-address-book"></i>
+          </button>
+        </span>
+      </header>
     </div>
+  </div>
 
-    <div class="row">
-      <div class="col-12">
-        <div class="content-section" id="wisdom_text">
-      <div class="row">
+  <div class="row">
+    <div class="col-12">
+      <div class="content-section" id="bitcoin_addresses">
         <div class="row">
           <div class="col-12">
-                  <div id="quote_satoshi" class="quotebox"></div>
+            <!-- START ADDRESSES TABLE CONTENT -->
+                [Coming soon...]
+            <!-- END ADDRESSES TABLE CONTENT -->
           </div>
         </div>
-        <div class="row">
-          <div class="col-12 text-start">
-            <footer style="padding-top: 20px" class="blockquote-footer">
-              Satoshi Nakamoto in
-              <cite id="load_source" title="Source Title">...</cite>
-            </footer>
-            <footer class="blockquote-footer">
-              <cite id="load_date">...</cite>
-            </footer>
-            <small>
-              Source:
-              <a class='text-white'
-                href="https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json"
-                target="_blank"
-                >Nakamoto Institute</a
-              >
-            </small>
-
-          </div>
-        <div class='row' style='padding-top: 20px;'>
-          <div class='col-12'>
-            <span class="text-small">
-              <button id="refresh_satoshi" class="btn btn-outline-light btn-block btn-sm">
-                      <i class="fa fa-refresh" aria-hidden="true"></i>
-                      &nbsp;refresh quote
-              </button>
-            </span>
-          </div>
-        </div>
-      </div>
-      </div>
-      </div>
-
       </div>
     </div>
-    <script src="{{url_for('static', filename='js/utils.js')}}"></script>
-    <script src="{{url_for('static', filename='js/satoshi_quotes.js')}}"></script>
-    <script src="{{url_for('static', filename='js/servers_update.js')}}"></script>
-    <script src="{{url_for('static', filename='js/text_scrambler.js')}}"></script>
-    <script src="{{url_for('static', filename='js/animate_number.js')}}"></script>
-    <script src="{{url_for('static', filename='js/stars.js')}}"></script>
-
-    {% endblock content %} {%block modals%} {% endblock modals %}
   </div>
+
+
+
+  <!-- Satoshi Quotes -->
+  <div class="row" style="padding-top: 20px">
+    <div class="col-12">
+      <header class="text-left dashboard-header">
+        Satoshi Nakamoto
+        <span class="text-small float-end">
+          <button id="add_wisdom" class="btn btn-outline-light btn-sm">
+            <i class="fa-solid fa-quote-left"></i>
+          </button>
+        </span>
+      </header>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="content-section" id="wisdom_text">
+    <div class="row">
+      <div class="row">
+        <div class="col-12">
+                <div id="quote_satoshi" class="quotebox"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-start">
+          <footer style="padding-top: 20px" class="blockquote-footer">
+            Satoshi Nakamoto in
+            <cite id="load_source" title="Source Title">...</cite>
+          </footer>
+          <footer class="blockquote-footer">
+            <cite id="load_date">...</cite>
+          </footer>
+          <small>
+            Source:
+            <a class='text-white'
+              href="https://raw.githubusercontent.com/NakamotoInstitute/nakamotoinstitute.org/0bf08c48cd21655c76e8db06da39d16036a88594/data/quotes.json"
+              target="_blank"
+              >Nakamoto Institute</a
+            >
+          </small>
+
+        </div>
+      <div class='row' style='padding-top: 20px;'>
+        <div class='col-12'>
+          <span class="text-small">
+            <button id="refresh_satoshi" class="btn btn-outline-light btn-block btn-sm">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    &nbsp;refresh quote
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div>
+
+    </div>
+  </div>
+
+  <script src="{{url_for('static', filename='js/utils.js')}}"></script>
+  <script src="{{url_for('static', filename='js/satoshi_quotes.js')}}"></script>
+  <script src="{{url_for('static', filename='js/servers_update.js')}}"></script>
+  <script src="{{url_for('static', filename='js/text_scrambler.js')}}"></script>
+  <script src="{{url_for('static', filename='js/animate_number.js')}}"></script>
+  <script src="{{url_for('static', filename='js/stars.js')}}"></script>
+
+  {% endblock content %} {%block modals%} {% endblock modals %}
+
+
 </div>
+  </div>
