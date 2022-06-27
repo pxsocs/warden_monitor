@@ -85,7 +85,6 @@ def node_indbase(node):
 def check_node(app, node):
     node = check_api_health(node)
     # Save the last time this node was refreshed with data
-    node.last_check = datetime.utcnow()
     with app.app_context():
         # check if this node is still in database
         # it may have been deleted while doing the background job
@@ -119,5 +118,7 @@ def check_tip_node(app, node):
     with app.app_context():
         node = get_sync_height(node)
         if node_indbase(node) is True:
+            if node.is_reachable is True:
+                node.last_check = datetime.utcnow()
             node = app.db.session.merge(node)
             app.db.session.commit()

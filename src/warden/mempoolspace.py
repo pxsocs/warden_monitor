@@ -9,6 +9,7 @@ from connections import tor_request, url_reachable, url_parser
 from ansi_management import (warning, success, error, info, clear_screen,
                              muted, yellow, blue)
 from utils import jformat
+from decorators import MWT
 
 
 # Method used to search for nodes - used at first config to
@@ -116,6 +117,7 @@ def node_actions(action=None, url=None, name=None, public=True):
 
 
 # Returns the highest block height in all servers
+@MWT(timeout=5)
 def get_max_height():
     from models import load_Node, Nodes
     from sqlalchemy import func
@@ -151,6 +153,7 @@ def get_max_height():
 # Mempoolspace API does not return the latest block height
 # that is synched on the server.
 # So, as an alternative, we can iterate and check where we are
+@MWT(timeout=5)
 def get_sync_height(node):
     url = node.url
     logging.info(muted("Checking tip height for " + node.name))
@@ -256,7 +259,6 @@ def get_sync_height(node):
                 else:
                     start = current_check + 1
 
-        # Load previous status, update and save
         if current_check > 0:
             node.node_tip_height = current_check
             logging.info(
@@ -266,6 +268,7 @@ def get_sync_height(node):
 
 
 # Get Block Header and return when was it found
+@MWT(timeout=30)
 def get_last_block_info(url, height):
     # Get Hash
     end_point = 'api/block-height/' + str(height)
@@ -288,6 +291,7 @@ def get_last_block_info(url, height):
     return (block_info)
 
 
+@MWT(timeout=6000)
 def check_block(url, block):
     end_point = 'api/block-height/'
     try:
@@ -317,6 +321,7 @@ def is_url_mp_api(url):
 # this is not the synch tip height but rather
 # the block with most proof of work - that can be
 # ahead of the synch tip height
+@MWT(timeout=2)
 def get_tip_height(url):
     endpoint = 'api/blocks/tip/height'
     result = tor_request(url + endpoint)
@@ -328,6 +333,7 @@ def get_tip_height(url):
         return None
 
 
+@MWT(timeout=2)
 def check_api_health(node):
     # . Reachable
     # . ping time

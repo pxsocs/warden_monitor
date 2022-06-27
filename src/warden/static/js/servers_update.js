@@ -19,8 +19,9 @@ const public_icon = `<span class="public_node" data-bs-toggle="tooltip" data-bs-
     <i class="fa-solid fa-users-between-lines"></i>
     </span>`
 
-
-
+const offline_icon = `<span class="onlineoffline" data-bs-toggle="tooltip" data-bs-placement="top" title="node is offline and cannot be reached">
+                        <i class="fa-solid fa-signal text-danger"></i>
+                    </span>`
 
 $(document).ready(function () {
 
@@ -156,8 +157,7 @@ function update_clock_content() {
         $(target).text(time_str);
     } else {
         $(target).html("<span class='text-warning'>offline</span>");
-        // offline_pill = createPill('offline', 'warning');
-        offline_pill = '<span>' + createPill('offline', 'warning') + '</span>';
+        const offline_pill = createPill('offline', 'warning')
         $('.onlineoffline').html(offline_pill);
     }
 }
@@ -378,13 +378,17 @@ function createProgress(text, progress, bg = 'info', datainfo = undefined) {
 }
 
 
-function createPill(text, bg = 'info', datainfo = undefined) {
+function createPill(text, bg = 'info', datainfo = undefined, text_color = undefined) {
     // pill start
     pill = '<span class="badge  bg-' + bg + ' '
     if (datainfo != undefined) {
-        pill += ' datainfo" data-bs-toggle="tooltip" data-bs-placement="top" title="' + datainfo + '"';
+        pill += '" datainfo data-bs-toggle="tooltip" data-bs-placement="top" title="' + datainfo + '"';
     }
-    pill += '>' + text + '</span>&nbsp;';
+    if (text_color != undefined) {
+        pill += '" style="color:' + text_color + '" >' + text + '</span>&nbsp;';
+    } else {
+        pill += '">' + text + '</span>&nbsp;';
+    }
     return (pill);
 }
 
@@ -471,26 +475,40 @@ function create_table(data) {
         if (progress >= 99) {
             bg = 'success'
         }
-        progress_bar = createProgress(formatNumber(progress, 0, '', '%'), progress, bg, 'Block height');
-        behind = max_height - tip_height
-        if (behind > 0) {
-            if (tip_height > 0) {
-                behind_html = "<br><span class='numberCircle'>" + formatNumber(behind, 0) + "&nbsp;blocks behind</span>"
-            } else {
-                behind_html = "<br><span class='numberCircle'>checking synch status</span>"
-            }
-        } else {
-            behind_html = ''
-        }
 
-        table += `<td class="text-center small-text onlineoffline"> ${formatNumber(tip_height, 0)} / ${formatNumber(max_tip_height, 0)} ${behind_html}  ${progress_bar} </td>`;
+        if (row.is_reachable == true) {
+            progress_bar = createProgress(formatNumber(progress, 0, '', '%'), progress, bg, 'Block height');
+            behind = max_height - tip_height
+            if (behind > 0) {
+                if (tip_height > 0) {
+                    behind_html = formatNumber(behind, 0) + " blocks behind"
+                    behind_html = "<br>" + createPill(`${behind_html}`, 'warning', '', 'black') + "<br>"
+                } else {
+                    behind_html = "checking synch status..."
+                    behind_html = "<br>" + createPill(`${behind_html}`, 'warning', '', 'black') + "<br>"
+                }
+            } else {
+                behind_html = ''
+            }
+
+            table += `<td class="text-center small-text onlineoffline"> ${formatNumber(tip_height, 0)} / ${formatNumber(max_tip_height, 0)} ${behind_html}  ${progress_bar} </td>`;
+        } else {
+            offline_pill = createPill('node is offline', 'warning', '', 'black')
+            if (row.tip_height > 0) {
+                add_txt = `<span class="text-danger"><br>last known block ${formatNumber(top_height, 0)}</span>`
+            } else {
+                add_txt = ''
+            }
+            table += `<td class="text-center small-text onlineoffline">${offline_pill}${add_txt}</td>`;
+
+        }
 
         // Updated time
         isoDateString = new Date().toISOString();
         currentTimeStamp = new Date(isoDateString).getTime()
         // Mark current time as UTC with a Z
         try {
-            updated_time = new Date(row.last_online + 'Z').toISOString()
+            updated_time = new Date(row.last_check + 'Z').toISOString()
             updated_time = new Date(updated_time).getTime()
             table += '<td class="onlineoffline text-end small-text">' + timeDifference(currentTimeStamp, updated_time) + '</td>';
         } catch {
@@ -521,11 +539,6 @@ function create_table(data) {
 
 
         // Check if online
-
-        offline_icon = `<span class="onlineoffline" data-bs-toggle="tooltip" data-bs-placement="top" title="node is offline and cannot be reached">
-                        <i class="fa-solid fa-signal text-danger"></i>
-                    </span>`
-
         ping = row.ping_time;
         if (ping != 0) {
             ping_array = ping.split(':');

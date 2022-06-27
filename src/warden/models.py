@@ -131,6 +131,14 @@ class Nodes(db.Model):
         # return f'{self.id}, {self.name}, {self.url}'
 
 
+class BitcoinData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group = db.Column(db.String(20), nullable=False)
+    derived_from_key = db.Column(db.String(250), nullable=False)
+    address = db.Column(db.String(250), nullable=False)
+    balance = db.Column(db.Float)
+
+
 # Table to save general data - can store variables for later use
 class GlobalData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
